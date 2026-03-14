@@ -134,7 +134,7 @@ section.active { display:block; }
    BTC STATS BAR
 ════════════════════════════════════════ */
 .stats-bar {
-  display:grid; grid-template-columns:repeat(5,1fr); gap:12px;
+  display:grid; grid-template-columns:repeat(6,1fr); gap:12px;
   margin-bottom:16px;
 }
 .stat-item {
@@ -355,6 +355,37 @@ footer { text-align:center; padding:20px; font-size:.68rem; color:var(--text3); 
 .mt-close { background:var(--bludim); border:1px solid var(--border); color:var(--text2); font-weight:600; font-size:.82rem; padding:10px 16px; border-radius:var(--rs); cursor:pointer; font-family:var(--font); transition:all .15s; }
 .mt-close:hover:not([disabled]) { border-color:var(--red); color:var(--red); }
 button[disabled] { opacity:.32; cursor:not-allowed !important; }
+/* Fear & Greed */
+.fng-bar-wrap { height:5px; border-radius:3px; background:linear-gradient(90deg,#ef4444 0%,#f97316 25%,#eab308 50%,#84cc16 75%,#22c55e 100%); margin:8px 0 4px; position:relative; }
+.fng-needle { position:absolute; top:-5px; width:3px; height:15px; background:#fff; border-radius:2px; transform:translateX(-50%); box-shadow:0 0 6px rgba(0,0,0,.6); transition:left .8s ease; }
+.fng-zone-lbl { font-size:.65rem; color:var(--text2); }
+/* AI Chat */
+.chat-wrap { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:14px; }
+.chat-head { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--card2); }
+.chat-head-title { font-size:.88rem; font-weight:700; color:var(--text); }
+.chat-head-sub { font-size:.68rem; color:var(--green); display:flex; align-items:center; gap:4px; margin-top:2px; }
+.chat-msgs { height:310px; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth; }
+.chat-msg { display:flex; gap:8px; align-items:flex-end; }
+.chat-msg.user { flex-direction:row-reverse; }
+.chat-av { width:26px; height:26px; border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:800; }
+.chat-av.ai-av { background:linear-gradient(135deg,var(--blue),#1d4ed8); color:#fff; }
+.chat-av.user-av { background:var(--bg2); border:1px solid var(--border); color:var(--text2); }
+.chat-bubble { max-width:82%; padding:9px 13px; font-size:.8rem; line-height:1.65; white-space:pre-wrap; word-break:break-word; }
+.chat-bubble.ai { background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:14px 14px 14px 3px; }
+.chat-bubble.user { background:var(--bludim); border:1px solid rgba(59,130,246,.28); color:var(--text); border-radius:14px 14px 3px 14px; }
+.typing-dots { display:flex; gap:4px; align-items:center; padding:2px 0; }
+.typing-dot { width:6px; height:6px; border-radius:50%; background:var(--text3); animation:tdot .7s infinite alternate; }
+.typing-dot:nth-child(2){ animation-delay:.15s; }
+.typing-dot:nth-child(3){ animation-delay:.3s; }
+@keyframes tdot { to { background:var(--blueb); transform:scale(1.4); } }
+.chat-sugs { display:flex; gap:6px; flex-wrap:wrap; padding:8px 12px 6px; border-top:1px solid var(--border); background:var(--bg2); min-height:36px; }
+.chat-sug { font-size:.7rem; padding:4px 10px; background:var(--card); border:1px solid var(--border); border-radius:20px; cursor:pointer; color:var(--text2); transition:all .15s; white-space:nowrap; }
+.chat-sug:hover { border-color:var(--blueb); color:var(--blueb); }
+.chat-foot { display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border); align-items:flex-end; }
+.chat-in { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:.82rem; padding:8px 12px; outline:none; transition:border-color .2s; }
+.chat-in:focus { border-color:var(--blueb); }
+.chat-send-btn { background:var(--blue); border:none; color:#fff; border-radius:var(--rs); padding:9px 18px; font-weight:700; font-size:.82rem; cursor:pointer; font-family:var(--font); transition:opacity .2s; white-space:nowrap; }
+.chat-send-btn:hover { opacity:.85; }
 /* AI calc explainer */
 .ai-calc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; margin-top:12px; }
 .ai-calc-item { background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:10px 12px; }
@@ -362,10 +393,29 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
 .ai-calc-body { font-size:.7rem; color:var(--text2); line-height:1.55; }
 .ai-auto-rule { background:rgba(37,99,235,.05); border:1px solid rgba(37,99,235,.18); border-left:3px solid var(--blueb); border-radius:var(--rs); padding:10px 14px; margin-top:12px; font-size:.76rem; color:var(--text2); line-height:1.7; }
 /* ════════════════════════════════════════
+   BOTTOM NAV (mobile)
+════════════════════════════════════════ */
+.bottom-nav {
+  display:none; position:fixed; bottom:0; left:0; right:0;
+  height:62px; background:rgba(2,11,24,.97); backdrop-filter:blur(18px);
+  border-top:1px solid var(--border); z-index:100;
+}
+.bn-grid { display:grid; grid-template-columns:repeat(4,1fr); height:100%; }
+.bn-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; background:transparent; border:none; cursor:pointer;
+  color:var(--text2); font-size:.62rem; font-weight:600;
+  font-family:var(--font); transition:color .2s; padding:4px 0;
+}
+.bn-btn.active { color:var(--blueb); }
+.bn-btn.active .bn-ico { filter:drop-shadow(0 0 4px rgba(59,130,246,.6)); }
+.bn-ico { font-size:1.28rem; line-height:1; }
+/* ════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════ */
 @media(max-width:1100px) {
   .stats-bar { grid-template-columns:repeat(3,1fr); }
+  .chat-bubble { max-width:92%; }
   .indicators-grid { grid-template-columns:repeat(2,1fr); }
   .signal-hero { grid-template-columns:1fr; }
   .sub-charts { grid-template-columns:1fr; }
@@ -373,17 +423,24 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   .sig-type-grid { grid-template-columns:repeat(2,1fr); }
 }
 @media(max-width:768px) {
-  main { padding:12px; }
-  .stats-bar { grid-template-columns:repeat(2,1fr); }
+  main { padding:10px 12px 78px; }
+  .stats-bar { grid-template-columns:repeat(3,1fr); }
   .g2,.g3,.g4 { grid-template-columns:1fr; }
   .paper-stats { grid-template-columns:repeat(2,1fr); }
   .paper-steps { grid-template-columns:repeat(2,1fr); }
-  .nav-price-wrap { display:none; }
+  .nav-price-wrap { display:flex !important; }
   .nav-menu { display:none; }
+  .bottom-nav { display:block; }
   .settings-grid { grid-template-columns:1fr; }
   .indicators-grid { grid-template-columns:repeat(2,1fr); }
   .sig-type-grid { grid-template-columns:1fr; }
   .tf-guide { grid-template-columns:1fr; }
+  .chat-msgs { height:240px; }
+  .signal-hero { padding:16px; }
+  .signal-name { font-size:2rem; }
+  .chart-header { flex-direction:column; align-items:flex-start; }
+  .mt-btns { flex-wrap:wrap; }
+  .mt-buy,.mt-sell { flex:1; text-align:center; }
 }
 </style>
 </head>
@@ -454,6 +511,12 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
       <div class="stat-label">Last Update</div>
       <div class="stat-val" id="lastUpd" style="font-size:.85rem">--:--:--</div>
       <div class="stat-sub" id="nextUpd" style="color:var(--text2)">--</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Fear &amp; Greed</div>
+      <div class="fng-val stat-val" id="fngVal" style="font-size:1.1rem">--</div>
+      <div class="fng-bar-wrap"><div class="fng-needle" id="fngNeedle" style="left:50%"></div></div>
+      <div class="fng-zone-lbl" id="fngZone">Loading...</div>
     </div>
   </div>
 
@@ -698,6 +761,51 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
       </div>
     </div>
   </div>
+
+  <!-- Fear & Greed Card -->
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">😨 Fear &amp; Greed Index <span style="font-weight:400;color:var(--text2)">(ความรู้สึกตลาด)</span></div>
+      <div style="font-size:.68rem;color:var(--text3)">alternative.me API</div>
+    </div>
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center">
+      <div style="text-align:center">
+        <div style="font-size:3rem;font-weight:800;font-family:var(--mono);line-height:1" id="fngBig">--</div>
+        <div style="font-size:.95rem;font-weight:700;margin-top:4px" id="fngClass">Loading...</div>
+        <div class="fng-bar-wrap" style="margin:10px 0 5px"><div class="fng-needle" id="fngNeedle2" style="left:50%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--text3)"><span>😱 Fear</span><span>😐</span><span>🤑 Greed</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px" id="fngHistory">
+        <div style="font-size:.72rem;color:var(--text3)">กำลังโหลด 7 วันล่าสุด...</div>
+      </div>
+    </div>
+    <div class="ai-auto-rule" style="margin-top:12px">
+      <strong style="color:var(--text)">📖 วิธีอ่าน Fear &amp; Greed:</strong>
+      &nbsp;0–24 = <span style="color:var(--red)">Extreme Fear 😱 ตลาดกลัวมาก → มักเป็นโอกาสซื้อสะสม</span> &nbsp;|&nbsp;
+      25–49 = <span style="color:var(--yellow)">Fear 😟</span> &nbsp;|&nbsp;
+      50 = Neutral &nbsp;|&nbsp;
+      51–74 = <span style="color:#84cc16">Greed 😊 ระวัง</span> &nbsp;|&nbsp;
+      75–100 = <span style="color:var(--green)">Extreme Greed 🤑 ระวัง! ใกล้ peak</span>
+    </div>
+  </div>
+
+  <!-- AI Chat -->
+  <div class="chat-wrap">
+    <div class="chat-head">
+      <div class="logo-icon" style="width:30px;height:30px;font-size:.7rem;flex-shrink:0">AI</div>
+      <div style="flex:1">
+        <div class="chat-head-title">AI Assistant — Bitcoin Analyst</div>
+        <div class="chat-head-sub"><div class="live-dot"></div>ออนไลน์ · ใช้ข้อมูล BTC real-time</div>
+      </div>
+      <button onclick="clearChat()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.72rem;font-family:var(--font)">ล้างแชท</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="chat-sugs" id="chatSugs"></div>
+    <div class="chat-foot">
+      <input class="chat-in" id="chatIn" placeholder="ถามเกี่ยวกับสัญญาณ BTC... เช่น 'ควรซื้อไหม?'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
+      <button class="chat-send-btn" onclick="sendChat()">ส่ง ↑</button>
+    </div>
+  </div>
 </section>
 
 <!-- ═══════════════════════════════
@@ -708,6 +816,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
     <div class="st"><span class="ic">📈</span> AI Paper Trading</div>
     <div style="display:flex;gap:8px;align-items:center">
       <span id="paperOpenCount" class="pill b">-- Open</span>
+      <button onclick="exportCSV()" style="background:var(--gd);border:1px solid rgba(34,197,94,.3);color:var(--green);border-radius:var(--rs);padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:var(--font)">⬇ CSV</button>
       <button onclick="resetPaper()" style="background:var(--rd);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:var(--rs);padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:var(--font)">Reset</button>
     </div>
   </div>
@@ -914,6 +1023,24 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   <div>© 2025 Invest AI · Personal Bitcoin Analysis Tool · Powered by CoinGecko API</div>
 </footer>
 
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav" id="bottomNav">
+  <div class="bn-grid">
+    <button class="bn-btn active" id="bn-s-chart" onclick="goTo('s-chart',this)">
+      <span class="bn-ico">📊</span><span>กราฟ</span>
+    </button>
+    <button class="bn-btn" id="bn-s-signal" onclick="goTo('s-signal',this)">
+      <span class="bn-ico">🤖</span><span>AI Signal</span>
+    </button>
+    <button class="bn-btn" id="bn-s-paper" onclick="goTo('s-paper',this)">
+      <span class="bn-ico">📈</span><span>Paper</span>
+    </button>
+    <button class="bn-btn" id="bn-s-settings" onclick="goTo('s-settings',this)">
+      <span class="bn-ico">⚙️</span><span>ตั้งค่า</span>
+    </button>
+  </div>
+</div>
+
 <script>
 /* ════════════════════════════════════════
    STATE
@@ -936,6 +1063,8 @@ const S = {
   rsiHistory: [],
   macdHistory: [],
   perfHistory: [],
+  fearGreed: null,
+  chatReady: false,
 };
 
 /* ════════════════════════════════════════
@@ -1836,6 +1965,8 @@ function showToast(msg) {
 ════════════════════════════════════════ */
 async function loadData() {
   el('refreshBtn').classList.add('spinning');
+  // Fetch Fear & Greed in parallel (fire-and-forget if fails)
+  fetchFearGreed().then(renderFearGreed).catch(()=>{});
   try {
     const [ohlc, priceData] = await Promise.all([fetchOHLC(S.tfDays), fetchPrice()]);
     S.candles = ohlc;
@@ -1874,6 +2005,7 @@ function processAll(priceData) {
   drawCandles();
   renderPaper();
   updatePriceSuggest();
+  if(!S.chatReady) { initChat(); S.chatReady=true; }
   startCountdown();
 }
 
@@ -1912,6 +2044,10 @@ function goTo(id, btn) {
   document.querySelectorAll('.nm').forEach(b=>b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn) btn.classList.add('active');
+  // sync bottom nav
+  document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
+  const bnBtn = document.getElementById('bn-'+id);
+  if(bnBtn) bnBtn.classList.add('active');
   if(id==='s-chart') setTimeout(()=>{ drawCandles(); },50);
   if(id==='s-paper') { renderPaper(); updatePriceSuggest(); }
 }
@@ -1941,6 +2077,253 @@ function saveSettings() {
   const token=document.getElementById('lineToken').value.trim();
   if(token) localStorage.setItem('investai_line_token',token);
   showToast('บันทึกการตั้งค่าแล้ว ✓');
+}
+
+/* ════════════════════════════════════════
+   FEAR & GREED INDEX
+════════════════════════════════════════ */
+async function fetchFearGreed() {
+  const r = await fetch('https://api.alternative.me/fng/?limit=7');
+  if(!r.ok) throw new Error('FNG fetch failed');
+  const data = (await r.json()).data;
+  S.fearGreed = data[0];
+  return data;
+}
+
+function renderFearGreed(data) {
+  if(!data||!data.length) return;
+  const cur = data[0];
+  const val = parseInt(cur.value);
+  const cls = cur.value_classification;
+  const col = val<25?'var(--red)':val<45?'var(--yellow)':val<55?'#a0a0a0':val<75?'#84cc16':'var(--green)';
+  const ico = val<25?'😱':val<45?'😟':val<55?'😐':val<75?'😊':'🤑';
+  // Small stat in stats bar
+  ['fngVal'].forEach(id=>{ const e=el(id); if(e){e.textContent=val; e.style.color=col;} });
+  ['fngNeedle','fngNeedle2'].forEach(id=>{ const e=el(id); if(e) e.style.left=val+'%'; });
+  ['fngZone'].forEach(id=>{ const e=el(id); if(e){e.textContent=cls; e.style.color=col;} });
+  // Big display in signal section
+  const big=el('fngBig'); if(big){big.textContent=ico+' '+val; big.style.color=col;}
+  const cls2=el('fngClass'); if(cls2){cls2.textContent=cls; cls2.style.color=col;}
+  // 7-day history
+  const hist=el('fngHistory');
+  if(hist) {
+    hist.innerHTML=data.map((d,i)=>{
+      const v=parseInt(d.value);
+      const c=v<25?'var(--red)':v<45?'var(--yellow)':v<55?'#6b7280':v<75?'#84cc16':'var(--green)';
+      const date=new Date(parseInt(d.timestamp)*1000).toLocaleDateString('th-TH',{weekday:'short',month:'short',day:'numeric'});
+      const barW=v+'%';
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:.72rem">
+        <span style="color:var(--text3);min-width:80px">${i===0?'วันนี้':date}</span>
+        <div style="flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden">
+          <div style="width:${barW};height:100%;background:${c};border-radius:3px;transition:width .8s"></div>
+        </div>
+        <span style="color:${c};font-family:var(--mono);font-weight:700;min-width:40px">${v} <span style="color:var(--text3);font-weight:400;font-size:.65rem">${d.value_classification.split(' ')[0]}</span></span>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* ════════════════════════════════════════
+   EXPORT CSV
+════════════════════════════════════════ */
+function exportCSV() {
+  if(!S.paperTrades.length) { showToast('ยังไม่มีรายการ trade'); return; }
+  const hdr = ['วันที่เข้า','ฝั่ง','ราคาเข้า (USD)','ราคาออก (USD)','P&L %','สัญญาณ','สถานะ'];
+  const rows = S.paperTrades.map(t => [
+    new Date(t.entryTime).toLocaleString('th-TH'),
+    t.side.toUpperCase(),
+    t.entryPrice.toFixed(2),
+    t.exitPrice ? t.exitPrice.toFixed(2) : '',
+    t.pnlPct != null ? t.pnlPct.toFixed(2) : '',
+    t.signal,
+    t.status
+  ]);
+  const csv = '\ufeff' + [hdr, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})),
+    download: `investai_trades_${new Date().toISOString().slice(0,10)}.csv`
+  });
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('✅ Export CSV สำเร็จ — ' + S.paperTrades.length + ' รายการ');
+}
+
+/* ════════════════════════════════════════
+   AI CHAT ENGINE
+════════════════════════════════════════ */
+function md(t) {
+  // minimal markdown: **bold** and newlines
+  return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
+function addChatMsg(role, text) {
+  const box = el('chatMsgs'); if(!box) return;
+  const isAI = role==='ai';
+  const time = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.innerHTML = `
+    <div class="chat-av ${isAI?'ai-av':'user-av'}">${isAI?'AI':'คุณ'}</div>
+    <div>
+      <div class="chat-bubble ${role}">${isAI?md(text):text}</div>
+      <div style="font-size:.6rem;color:var(--text3);margin-top:3px;${role==='user'?'text-align:right':''}">${time}</div>
+    </div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = el('chatMsgs'); if(!box) return null;
+  const div = document.createElement('div');
+  div.className = 'chat-msg ai'; div.id = 'chatTyping';
+  div.innerHTML = `<div class="chat-av ai-av">AI</div><div class="chat-bubble ai"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  box.appendChild(div); box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function setSuggestions(list) {
+  const box = el('chatSugs'); if(!box) return;
+  box.innerHTML = list.map(s=>`<button class="chat-sug" onclick="quickChat('${s}')">${s}</button>`).join('');
+}
+
+function quickChat(text) { const inp=el('chatIn'); if(inp){inp.value=text;} sendChat(); }
+
+function clearChat() {
+  const box=el('chatMsgs'); if(box) box.innerHTML='';
+  S.chatReady=false; initChat();
+}
+
+function generateChatResponse(raw) {
+  const msg = raw.toLowerCase();
+  const sig = S.signal;
+  const price = S.currentPrice;
+  if(!sig || !price) return {text:'ยังโหลดข้อมูลไม่เสร็จครับ กรุณารอสักครู่แล้วลองใหม่ 🔄', sugs:['สัญญาณตอนนี้','ราคา BTC']};
+
+  const fmt = v => '$'+Math.round(v).toLocaleString();
+  const sc = sig.score;
+  const sigIco = sig.isBuy?'🟢':sig.isSell?'🔴':'🟡';
+
+  // greeting
+  if(/สวัสดี|หวัดดี|hello|hi\b|เฮ้|ดีจ้า/.test(msg))
+    return {text:`สวัสดีครับ! 👋 ผมคือ AI วิเคราะห์ Bitcoin ส่วนตัวของคุณ\n\nตอนนี้ BTC อยู่ที่ **${fmt(price)}**\nสัญญาณล่าสุด: ${sigIco} **${sig.sigName}** (Score: ${sc>0?'+':''}${sc})\n\nถามอะไรได้เลยครับ!`, sugs:['ควรซื้อไหม?','RSI ตอนนี้เป็นยังไง','Fear & Greed ตอนนี้','อธิบาย MACD ให้หน่อย']};
+
+  // should I buy
+  if(/ซื้อ|buy|เข้า.*position|long/.test(msg)) {
+    if(sig.isBuy) {
+      const lvl = sig.sigName==='STRONG BUY'?'แรงมาก 💪':sig.sigName==='BUY'?'ชัดเจน ✅':'อ่อนๆ ⚠️';
+      const slPct = sig.sigName.includes('STRONG')?5:sig.sigName.includes('WEAK')?2.5:4;
+      return {text:`${sigIco} สัญญาณ **${sig.sigName}** — ระดับ${lvl}\n\nScore รวม: **${sc>0?'+':''}${sc}** / +13\nความมั่นใจ: **${sig.confidence}%**\n\n📍 Entry: **${fmt(price)}**\n🛡 Stop Loss: **${sig.targets?fmt(sig.targets.sl):'--'}** (~${slPct}%)\n🎯 Take Profit: **${sig.targets?fmt(sig.targets.tp):'--'}**\n\nเหตุผล: ${sig.reasons.slice(0,3).map(r=>r.replace(/[🟢🔴🟡]/g,'').trim()).join(' · ')}\n\n⚠️ นี่คือการวิเคราะห์ส่วนตัว ไม่ใช่คำแนะนำการเงิน`, sugs:['Stop Loss อยู่ที่ไหน','RSI ตอนนี้เป็นยังไง','Elliott Wave บอกว่าอะไร']};
+    } else if(sig.isSell) {
+      return {text:`🔴 สัญญาณตอนนี้เป็น **${sig.sigName}** — ยังไม่แนะนำให้ซื้อครับ\n\nตัวชี้วัดส่วนใหญ่ชี้ขาลง ควรรอสัญญาณกลับมาเป็น BUY ก่อน\n\nเหตุผล:\n${sig.reasons.slice(0,3).map(r=>'• '+r.replace(/[🟢🔴🟡]/g,'').trim()).join('\n')}`, sugs:['ควรขายไหม?','MACD ตอนนี้เป็นยังไง','รอสัญญาณอะไร']};
+    }
+    return {text:`🟡 สัญญาณ **HOLD** — ตัวชี้วัดยังไม่ชัดเจนพอครับ\n\nScore: ${sc} (ต้องถึง +4 ขึ้นไปจึงจะ BUY)\nควรรอดูก่อน อย่าเพิ่งเข้า position ใหม่`, sugs:['สัญญาณตอนนี้เป็นยังไง','RSI ตอนนี้เป็นยังไง','Fear & Greed ตอนนี้']};
+  }
+
+  // should I sell
+  if(/ขาย|sell|ออก.*position|short|cut.*loss/.test(msg)) {
+    if(sig.isSell)
+      return {text:`${sigIco} สัญญาณ **${sig.sigName}** — ${sig.sigName.includes('STRONG')?'ขายทันทีครับ! 🚨':'แนะนำให้ขายหรือลด position'}\n\nScore: ${sc} / -13\n\n${sig.reasons.slice(0,3).map(r=>'• '+r.replace(/[🟢🔴🟡]/g,'').trim()).join('\n')}\n\n⚠️ ตัดสินใจเองด้วยนะครับ`, sugs:['Stop Loss อยู่ที่ไหน','Bollinger Bands บอกว่าอะไร','สัญญาณ Medium Term']};
+    if(sig.isBuy)
+      return {text:`🟢 สัญญาณยังเป็น **${sig.sigName}** อยู่ — ยังไม่ถึงเวลาขายครับ\n\nถ้ากำไรอยู่แล้วและอยากล็อกกำไร ลอง Trailing Stop ได้ครับ\nTP ประมาณ: ${sig.targets?fmt(sig.targets.tp):'--'}`, sugs:['Take Profit อยู่ที่ไหน','Bollinger Bands บอกว่าอะไร']};
+    return {text:`🟡 **HOLD** — ถ้าถือ BTC อยู่และยังไม่ขาดทุนมาก แนะนำรอดูก่อนครับ อย่า panic sell`, sugs:['สัญญาณตอนนี้เป็นยังไง','Fear & Greed ตอนนี้']};
+  }
+
+  // RSI
+  if(/rsi|relative strength/.test(msg)) {
+    const r = sig.lastRSI;
+    const zone = r<30?'🔴 **Oversold** (ราคาถูกขายมากเกินไป → โอกาสกลับตัวขึ้น)':r>70?'🔴 **Overbought** (ราคาถูกซื้อมากเกินไป → ระวังลง)':r<45?'🟡 ใกล้ Oversold zone':r>55?'🟡 ใกล้ Overbought zone':'🟢 Neutral Zone (40–60)';
+    return {text:`📉 **RSI (14) ตอนนี้: ${r.toFixed(1)}** — ${zone}\n\n**RSI คืออะไร?**\nวัดความแรงของแรงซื้อ-ขาย ช่วง 0–100\n• < 30 = Oversold ราคาถูกเกินไป → โอกาสซื้อ\n• > 70 = Overbought ราคาแพงเกินไป → ระวัง\n• 40–60 = Neutral ไม่มีสัญญาณชัด`, sugs:['MACD ตอนนี้เป็นยังไง','Bollinger Bands บอกว่าอะไร','ควรซื้อไหม?']};
+  }
+
+  // MACD
+  if(/macd|histogram|crossover/.test(msg)) {
+    const h = sig.lastHist;
+    const dir = h>0?'🟢 **Bullish** — แรงซื้อกำลังเพิ่ม':'🔴 **Bearish** — แรงขายกำลังเพิ่ม';
+    return {text:`📈 **MACD Histogram: ${h!=null?(h>0?'+':'')+h.toFixed(0):'--'}** — ${dir}\n\n**MACD คืออะไร?**\nวัด momentum จาก EMA 12 และ EMA 26\n• Histogram บวก = แรงซื้อมากกว่าแรงขาย\n• Histogram ลบ = แรงขายมากกว่า\n• **Crossover** (ตัดผ่าน 0) = สัญญาณแรงมาก ควรให้น้ำหนัก!`, sugs:['RSI ตอนนี้เป็นยังไง','Moving Average บอกว่าอะไร','สรุปสัญญาณทั้งหมด']};
+  }
+
+  // Bollinger Bands
+  if(/bollinger|bb\b|แบนด์/.test(msg)) {
+    return {text:`🎯 **Bollinger Bands (20, ±2σ)**\n\nช่วงราคาปกติคำนวณจากค่าเบี่ยงเบนมาตรฐาน\n• **Upper Band** → ราคาแพงเกินปกติ ระวัง\n• **Middle Band** (SMA 20) → เส้นกลาง\n• **Lower Band** → ราคาถูกเกินปกติ โอกาสซื้อ\n\nช่วง BB แคบ = กำลัง consolidate เตรียม breakout\nช่วง BB กว้าง = ราคากำลัง volatile`, sugs:['RSI ตอนนี้เป็นยังไง','ควรซื้อไหม?','Moving Average บอกว่าอะไร']};
+  }
+
+  // MA / Golden Cross / Death Cross
+  if(/\bma\b|moving average|golden cross|death cross|ค่าเฉลี่ย/.test(msg)) {
+    return {text:`📊 **Moving Average (MA20 / MA50)**\n• **MA20** (สีส้ม) = ค่าเฉลี่ยราคา 20 วัน — ดูเทรนด์ระยะสั้น\n• **MA50** (สีม่วง) = ค่าเฉลี่ยราคา 50 วัน — ดูเทรนด์ระยะกลาง\n\n🟢 **Golden Cross** = MA20 ตัด MA50 ขึ้น → สัญญาณขาขึ้น\n🔴 **Death Cross** = MA20 ตัด MA50 ลง → สัญญาณขาลง\n\nถ้า ราคา > MA20 > MA50 = เทรนด์แข็งแกร่ง 💪`, sugs:['MACD ตอนนี้เป็นยังไง','RSI ตอนนี้เป็นยังไง','สรุปสัญญาณทั้งหมด']};
+  }
+
+  // Fear & Greed
+  if(/fear|greed|กลัว|โลภ|sentiment|ความรู้สึก/.test(msg)) {
+    const fng = S.fearGreed;
+    if(fng) {
+      const v=parseInt(fng.value), cls=fng.value_classification;
+      const ico=v<25?'😱':v<45?'😟':v<55?'😐':v<75?'😊':'🤑';
+      const advice=v<30?'💡 ตลาดกลัวมาก → นักลงทุนระยะยาวมักมองว่าเป็นโอกาสสะสม':v>70?'⚠️ ตลาดโลภมาก → ระวัง overextend อาจใกล้จุดพัก':'ตลาดอยู่ในโซน neutral';
+      return {text:`${ico} **Fear & Greed Index: ${v}/100 — ${cls}**\n\n${advice}\n\n0–24 😱 Extreme Fear → โอกาสซื้อ\n25–49 😟 Fear\n50 😐 Neutral\n51–74 😊 Greed → ระวัง\n75–100 🤑 Extreme Greed → ระวังมาก`, sugs:['ควรซื้อไหม?','สัญญาณตอนนี้เป็นยังไง']};
+    }
+    return {text:'Fear & Greed กำลังโหลด ลองรีเฟรชแล้วถามใหม่ครับ 🔄', sugs:['สัญญาณตอนนี้เป็นยังไง']};
+  }
+
+  // Elliott Wave
+  if(/elliott|wave|คลื่น/.test(msg))
+    return {text:`🌊 **Elliott Wave Analysis**\n\n${sig.ewaveDesc}\n\n📅 Short: **${sig.ewShort}**\n📅 Medium: **${sig.ewMed}**\n📅 Long: **${sig.ewLong}**\n\n*Elliott Wave เป็นการวิเคราะห์แบบ simplified ใช้ประกอบการตัดสินใจเท่านั้น*`, sugs:['ควรซื้อไหม?','สัญญาณตอนนี้เป็นยังไง']};
+
+  // Price
+  if(/ราคา|price|เท่าไหร่/.test(msg)) {
+    const chg=S.marketData?.usd_24h_change||0;
+    return {text:`💰 **ราคา BTC ตอนนี้: ${fmt(price)}**\nเปลี่ยนแปลง 24h: ${chg>=0?'+':''}${chg.toFixed(2)}%\n\n${sigIco} สัญญาณ: **${sig.sigName}** (Score: ${sc>0?'+':''}${sc})\n\n*ราคาจาก CoinGecko = ค่าเฉลี่ยหลาย exchange อาจต่างจาก Binance/Coinbase $10–200 ถือว่าปกติ*`, sugs:['ควรซื้อไหม?','Fear & Greed ตอนนี้']};
+  }
+
+  // Stop loss / TP
+  if(/stop.*loss|sl\b|take.*profit|\btp\b|risk|ความเสี่ยง/.test(msg)) {
+    const slPct=sig.sigName.includes('STRONG')?5:sig.sigName.includes('WEAK')?2.5:4;
+    const tpPct=slPct*2.5;
+    const sl=price*(sig.isBuy?1-slPct/100:1+slPct/100);
+    const tp=price*(sig.isBuy?1+tpPct/100:1-tpPct/100);
+    return {text:`🛡 **แนะนำ Stop Loss & Take Profit**\n\nสัญญาณปัจจุบัน: **${sig.sigName}**\nราคาปัจจุบัน: **${fmt(price)}**\n\n🛡 Stop Loss: **${fmt(sl)}** (${slPct}%)\n🎯 Take Profit: **${fmt(tp)}** (${(tpPct).toFixed(1)}%)\n⚖️ Risk/Reward: 1:2.5\n\nหลักการ: Risk ต่อ trade ไม่ควรเกิน **1–2%** ของ portfolio`, sugs:['ควรซื้อไหม?','Paper Trade ทำยังไง']};
+  }
+
+  // Summary / signal / overview
+  if(/สัญญาณ|signal|ตอนนี้|เป็นยังไง|สรุป|อธิบาย|overview|ภาพรวม/.test(msg)) {
+    const reasons=sig.reasons.slice(0,4).map(r=>'• '+r.replace(/[🟢🔴🟡]/g,'').trim()).join('\n');
+    return {text:`${sigIco} **สรุปสัญญาณ BTC ตอนนี้**\n\n💰 ราคา: **${fmt(price)}**\n🤖 สัญญาณ: **${sig.sigName}** (Score: ${sc>0?'+':''}${sc})\nความมั่นใจ: **${sig.confidence}%**\n\n**เหตุผลหลัก:**\n${reasons}\n\n${sig.isBuy?'✅ ตัวชี้วัดส่วนใหญ่ชี้ขาขึ้น':sig.isSell?'⚠️ ตัวชี้วัดส่วนใหญ่ชี้ขาลง':'⏸ สัญญาณยังไม่ชัดเจน รอดูต่อ'}`, sugs:['ควรซื้อไหม?','Stop Loss อยู่ที่ไหน','Fear & Greed ตอนนี้','Elliott Wave บอกว่าอะไร']};
+  }
+
+  // Paper trade
+  if(/paper|จำลอง|ทดลอง/.test(msg))
+    return {text:`📋 **Paper Trading — ซื้อขายจำลอง**\n\nเริ่มต้น $10,000 ระบบบันทึกการซื้อขายตาม AI signal อัตโนมัติ\n\n**วิธีใช้:**\n1. ไปหน้า "📈 Paper"\n2. AI เปิด position อัตโนมัติเมื่อ score ≥ +4 (BUY) หรือ ≤ -4 (SELL)\n3. หรือกด **🟢 เปิด BUY / 🔴 เปิด SELL** เองได้เลย\n4. ดู Win Rate และผลตอบแทนสะสม\n5. กด **⬇ CSV** เพื่อ export ประวัติ`, sugs:['ควรซื้อไหม?','สัญญาณตอนนี้เป็นยังไง']};
+
+  // thank you
+  if(/ขอบคุณ|thank|thanks|โอเค|เข้าใจ|ดีมาก/.test(msg))
+    return {text:'ยินดีครับ! 😊 มีคำถามอะไรเกี่ยวกับ BTC ถามได้ตลอดเลย 🚀', sugs:['สัญญาณตอนนี้เป็นยังไง','ควรซื้อไหม?','Fear & Greed ตอนนี้']};
+
+  // default
+  return {text:`ขอโทษครับ ไม่แน่ใจว่าถามเกี่ยวกับอะไร 🤔\n\nลองถามแบบนี้ดูครับ:\n• "สัญญาณตอนนี้เป็นยังไง?"\n• "ควรซื้อไหม?"\n• "RSI ตอนนี้เป็นยังไง"\n• "Fear & Greed ตอนนี้"\n• "อธิบาย MACD ให้หน่อย"`, sugs:['สัญญาณตอนนี้เป็นยังไง','ควรซื้อไหม?','RSI ตอนนี้เป็นยังไง','Fear & Greed ตอนนี้']};
+}
+
+function sendChat() {
+  const inp = el('chatIn'); if(!inp) return;
+  const text = inp.value.trim(); if(!text) return;
+  inp.value='';
+  addChatMsg('user', text);
+  setSuggestions([]);
+  const typing = showTyping();
+  setTimeout(()=>{
+    if(typing) typing.remove();
+    const {text:reply, sugs} = generateChatResponse(text);
+    addChatMsg('ai', reply);
+    setSuggestions(sugs||[]);
+  }, 600 + Math.random()*400);
+}
+
+function initChat() {
+  const box = el('chatMsgs'); if(!box) return;
+  box.innerHTML='';
+  const sig=S.signal, price=S.currentPrice;
+  const greeting = sig && price
+    ? `สวัสดีครับ! 👋 ตอนนี้ BTC อยู่ที่ **$${Math.round(price).toLocaleString()}**\n\nสัญญาณล่าสุด: ${sig.isBuy?'🟢':sig.isSell?'🔴':'🟡'} **${sig.sigName}** (Score: ${sig.score>0?'+':''}${sig.score} / ความมั่นใจ ${sig.confidence}%)\n\nถามอะไรได้เลยครับ เช่น "ควรซื้อไหม?" หรือ "อธิบายสัญญาณให้หน่อย"`
+    : `สวัสดีครับ! 👋 กำลังโหลดข้อมูล BTC...\n\nถามอะไรก็ได้เกี่ยวกับการวิเคราะห์ Bitcoin นะครับ`;
+  addChatMsg('ai', greeting);
+  setSuggestions(['ควรซื้อไหม?','สรุปสัญญาณทั้งหมด','RSI ตอนนี้เป็นยังไง','Fear & Greed ตอนนี้']);
 }
 
 /* ════════════════════════════════════════
