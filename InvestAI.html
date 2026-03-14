@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invest AI — Bitcoin Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════
+   VARIABLES & RESET
+════════════════════════════════════════ */
+:root {
+  --bg:      #020b18;
+  --bg2:     #051120;
+  --card:    #091828;
+  --card2:   #0e2444;
+  --border:  rgba(37,99,235,.18);
+  --bhi:     rgba(59,130,246,.42);
+  --text:    #cdd9f0;
+  --text2:   #5b7299;
+  --text3:   #243350;
+  --blue:    #2563eb;
+  --blueb:   #3b82f6;
+  --bludim:  rgba(37,99,235,.1);
+  --bluglow: rgba(37,99,235,.28);
+  --btc:     #f59e0b;
+  --btcdim:  rgba(245,158,11,.12);
+  --green:   #22c55e;
+  --gd:      rgba(34,197,94,.1);
+  --red:     #ef4444;
+  --rd:      rgba(239,68,68,.1);
+  --yellow:  #eab308;
+  --yd:      rgba(234,179,8,.1);
+  --font:    'IBM Plex Sans Thai', sans-serif;
+  --mono:    'IBM Plex Mono', monospace;
+  --r:       12px;
+  --rs:      8px;
+  --nh:      58px;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--blue); }
+
+/* ════════════════════════════════════════
+   LOADING OVERLAY
+════════════════════════════════════════ */
+#loading {
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:999; transition:opacity .5s;
+}
+.spinner {
+  width:48px; height:48px;
+  border:3px solid var(--border);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin-bottom:16px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.load-txt { color:var(--text2); font-size:.85rem; }
+.load-btc { font-size:1.5rem; font-weight:700; color:var(--btc); margin-bottom:8px; }
+
+/* ════════════════════════════════════════
+   NAV
+════════════════════════════════════════ */
+nav {
+  position:fixed; top:0; left:0; right:0; height:var(--nh);
+  background:rgba(2,11,24,.95); backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px; z-index:100;
+}
+.logo { display:flex; align-items:center; gap:9px; text-decoration:none; }
+.logo-icon {
+  width:32px; height:32px;
+  background:linear-gradient(135deg,var(--blue),#1d4ed8);
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:.72rem; font-weight:800; color:#fff; letter-spacing:-.5px;
+}
+.logo-txt { font-size:1.1rem; font-weight:700; color:var(--text); }
+.logo-txt span { color:var(--blueb); }
+.nav-price-wrap {
+  display:flex; align-items:center; gap:12px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--rs); padding:6px 14px;
+}
+.btc-label { font-size:.7rem; font-weight:700; color:var(--btc); }
+.btc-price { font-family:var(--mono); font-size:1rem; font-weight:600; color:var(--text); }
+.btc-chg { font-family:var(--mono); font-size:.8rem; font-weight:600; }
+.nav-menu { display:flex; gap:2px; }
+.nm { padding:6px 13px; border-radius:var(--rs); color:var(--text2); font-size:.82rem; font-weight:500; cursor:pointer; transition:all .2s; border:none; background:transparent; font-family:var(--font); }
+.nm:hover { background:var(--bludim); color:var(--blueb); }
+.nm.active { background:var(--bludim); color:var(--blueb); border:1px solid rgba(59,130,246,.2); }
+.nav-r { display:flex; align-items:center; gap:8px; }
+.live-pill { display:flex; align-items:center; gap:5px; font-size:.68rem; font-weight:700; color:var(--green); background:var(--gd); padding:4px 9px; border-radius:20px; border:1px solid rgba(34,197,94,.2); }
+.live-dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+.btn-refresh { background:var(--bludim); border:1px solid var(--border); color:var(--blueb); border-radius:var(--rs); padding:6px 12px; font-size:.78rem; font-weight:600; cursor:pointer; font-family:var(--font); transition:all .2s; }
+.btn-refresh:hover { background:rgba(59,130,246,.2); border-color:var(--blueb); }
+.btn-refresh.spinning svg { animation:spin .8s linear infinite; }
+.api-badge { font-size:.65rem; padding:3px 8px; border-radius:20px; font-weight:700; }
+.api-live { background:var(--gd); color:var(--green); border:1px solid rgba(34,197,94,.2); }
+.api-demo { background:var(--yd); color:var(--yellow); border:1px solid rgba(234,179,8,.2); }
+
+/* ════════════════════════════════════════
+   LAYOUT
+════════════════════════════════════════ */
+main { margin-top:var(--nh); padding:18px 20px; max-width:1400px; margin-left:auto; margin-right:auto; }
+section { display:none; animation:fadeIn .3s ease; }
+section.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.sh { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.st { font-size:1rem; font-weight:700; display:flex; align-items:center; gap:7px; }
+.st .ic { color:var(--blueb); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+
+/* ════════════════════════════════════════
+   CARDS
+════════════════════════════════════════ */
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:18px; }
+.card:hover { border-color:var(--bhi); transition:border-color .2s; }
+.card-title { font-size:.68rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.1em; margin-bottom:10px; }
+
+/* ════════════════════════════════════════
+   BTC STATS BAR
+════════════════════════════════════════ */
+.stats-bar {
+  display:grid; grid-template-columns:repeat(5,1fr); gap:12px;
+  margin-bottom:16px;
+}
+.stat-item {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--rs);
+  padding:12px 14px; position:relative; overflow:hidden;
+}
+.stat-item::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1.5px;
+  background:linear-gradient(90deg,var(--blue),transparent);
+}
+.stat-label { font-size:.65rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+.stat-val { font-family:var(--mono); font-size:1.1rem; font-weight:600; color:var(--text); }
+.stat-val.btc { color:var(--btc); font-size:1.3rem; }
+.stat-sub { font-family:var(--mono); font-size:.72rem; margin-top:2px; font-weight:600; }
+
+/* ════════════════════════════════════════
+   CHART SECTION
+════════════════════════════════════════ */
+.chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+.tf-tabs { display:flex; gap:3px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:3px; }
+.tf-tab { padding:5px 12px; border-radius:6px; font-size:.78rem; font-weight:600; color:var(--text2); cursor:pointer; border:none; background:transparent; font-family:var(--font); transition:all .15s; }
+.tf-tab.active { background:var(--bludim); color:var(--blueb); }
+.overlay-btns { display:flex; gap:6px; }
+.ov-btn { padding:5px 10px; border-radius:6px; font-size:.72rem; font-weight:700; cursor:pointer; border:1px solid; background:transparent; font-family:var(--font); transition:all .15s; }
+.ov-btn.active.ma20 { background:rgba(255,153,51,.15); border-color:rgba(255,153,51,.5); color:#ff9933; }
+.ov-btn.ma20 { border-color:rgba(255,153,51,.3); color:rgba(255,153,51,.6); }
+.ov-btn.active.ma50 { background:rgba(167,102,255,.15); border-color:rgba(167,102,255,.5); color:#a766ff; }
+.ov-btn.ma50 { border-color:rgba(167,102,255,.3); color:rgba(167,102,255,.6); }
+.ov-btn.active.bb { background:rgba(59,130,246,.15); border-color:rgba(59,130,246,.5); color:var(--blueb); }
+.ov-btn.bb { border-color:rgba(59,130,246,.3); color:rgba(59,130,246,.6); }
+.chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:14px; }
+canvas#mainChart { display:block; width:100%; }
+.chart-ohlc { display:flex; gap:16px; padding:8px 0 10px; border-bottom:1px solid var(--border); margin-bottom:10px; flex-wrap:wrap; }
+.ohlc-i { display:flex; gap:5px; font-size:.75rem; }
+.ohlc-i .l { color:var(--text2); }
+.ohlc-i .v { font-family:var(--mono); font-weight:600; }
+.sub-charts { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.sub-chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px; }
+.sub-chart-title { font-size:.68rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+.sub-chart-val { font-family:var(--mono); font-size:.9rem; font-weight:700; }
+
+/* ════════════════════════════════════════
+   RSI GAUGE BAR
+════════════════════════════════════════ */
+.rsi-bar-wrap { position:relative; height:7px; background:linear-gradient(90deg,#ef4444 0%,#ef4444 29%,#eab308 29%,#eab308 34%,rgba(34,197,94,.25) 34%,rgba(34,197,94,.25) 66%,#eab308 66%,#eab308 71%,#ef4444 71%); border-radius:3px; margin-top:8px; }
+.rsi-needle { position:absolute; top:-4px; width:3px; height:15px; background:var(--blueb); border-radius:2px; transform:translateX(-50%); transition:left .8s ease; }
+.rsi-labels { display:flex; justify-content:space-between; font-size:.6rem; color:var(--text3); margin-top:4px; }
+
+/* ════════════════════════════════════════
+   AI SIGNAL SECTION
+════════════════════════════════════════ */
+.signal-hero {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+  padding:28px 24px; margin-bottom:14px;
+  display:grid; grid-template-columns:1fr 280px; gap:24px; align-items:center;
+}
+.signal-main { display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+.signal-tag { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--text2); }
+.signal-name { font-size:2.8rem; font-weight:800; letter-spacing:-.02em; line-height:1; }
+.signal-conf { font-size:.85rem; color:var(--text2); }
+.signal-conf span { font-family:var(--mono); font-weight:700; color:var(--text); }
+.signal-reasons { display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+.reason-item { display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--text2); }
+.reason-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.signal-targets { background:var(--bg2); border-radius:var(--rs); padding:18px; border:1px solid var(--border); }
+.target-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); }
+.target-row:last-child { border-bottom:none; }
+.target-lbl { font-size:.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; }
+.target-val { font-family:var(--mono); font-size:.9rem; font-weight:700; }
+
+.indicators-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+.ind-card { background:var(--card); border:1px solid var(--border); border-radius:var(--rs); padding:14px; }
+.ind-name { font-size:.65rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
+.ind-val { font-family:var(--mono); font-size:1.2rem; font-weight:700; margin-bottom:3px; }
+.ind-sig { font-size:.72rem; font-weight:700; padding:3px 9px; border-radius:4px; display:inline-block; }
+.ind-sig.buy { background:var(--gd); color:var(--green); }
+.ind-sig.sell { background:var(--rd); color:var(--red); }
+.ind-sig.hold { background:var(--yd); color:var(--yellow); }
+.score-bar { height:4px; background:var(--bg2); border-radius:2px; overflow:hidden; margin-top:8px; }
+.score-fill { height:100%; border-radius:2px; transition:width .5s; }
+
+/* ════════════════════════════════════════
+   PAPER TRADE SECTION
+════════════════════════════════════════ */
+.paper-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+.ps-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; text-align:center; }
+.ps-label { font-size:.65rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; }
+.ps-val { font-family:var(--mono); font-size:1.55rem; font-weight:700; }
+.ps-val.g { color:var(--green); }
+.ps-val.r { color:var(--red); }
+.ps-val.b { color:var(--blueb); }
+.ps-sub { font-size:.72rem; color:var(--text2); margin-top:3px; }
+.trade-list { display:flex; flex-direction:column; gap:7px; max-height:320px; overflow-y:auto; }
+.trade-item { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); }
+.trade-side { font-size:.68rem; font-weight:800; padding:3px 9px; border-radius:4px; min-width:40px; text-align:center; }
+.trade-side.buy { background:var(--gd); color:var(--green); }
+.trade-side.sell { background:var(--rd); color:var(--red); }
+.trade-asset { font-weight:700; font-size:.85rem; flex:1; color:var(--btc); }
+.trade-price { font-family:var(--mono); font-size:.78rem; color:var(--text2); }
+.trade-pnl { font-family:var(--mono); font-size:.85rem; font-weight:700; min-width:75px; text-align:right; }
+.trade-status { font-size:.65rem; padding:3px 9px; border-radius:4px; font-weight:600; }
+.trade-status.open { background:var(--bludim); color:var(--blueb); border:1px solid rgba(59,130,246,.2); }
+.trade-status.closed { background:var(--bg); color:var(--text3); border:1px solid var(--border); }
+.trade-date { font-size:.65rem; color:var(--text3); min-width:55px; text-align:right; }
+.empty-trades { text-align:center; padding:32px; color:var(--text2); font-size:.85rem; }
+
+/* ════════════════════════════════════════
+   SETTINGS SECTION
+════════════════════════════════════════ */
+.settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.form-label { display:block; font-size:.75rem; font-weight:600; color:var(--text2); margin-bottom:7px; }
+.form-input { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:.85rem; padding:9px 12px; outline:none; transition:border-color .2s; margin-bottom:12px; }
+.form-input:focus { border-color:var(--blueb); }
+.tog-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+.tog-info { display:flex; flex-direction:column; gap:2px; }
+.tog-name { font-size:.85rem; font-weight:600; }
+.tog-sub { font-size:.72rem; color:var(--text2); }
+.toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-s { position:absolute; cursor:pointer; inset:0; background:var(--bg2); border:1px solid var(--border); border-radius:11px; transition:.25s; }
+.toggle-s::before { content:''; position:absolute; width:16px; height:16px; left:2px; bottom:2px; background:var(--text3); border-radius:50%; transition:.25s; }
+.toggle input:checked + .toggle-s { background:var(--bludim); border-color:var(--blueb); }
+.toggle input:checked + .toggle-s::before { transform:translateX(18px); background:var(--blueb); }
+.btn-primary { background:linear-gradient(135deg,var(--blue),#1d4ed8); color:#fff; font-weight:700; font-size:.85rem; padding:10px 20px; border-radius:var(--rs); border:none; cursor:pointer; font-family:var(--font); width:100%; margin-top:4px; transition:opacity .2s; }
+.btn-primary:hover { opacity:.88; }
+.btn-test { background:var(--bludim); border:1px solid var(--border); color:var(--blueb); border-radius:var(--rs); padding:9px 18px; font-family:var(--font); font-size:.85rem; font-weight:600; cursor:pointer; width:100%; margin-top:4px; transition:all .2s; }
+.btn-test:hover { background:rgba(59,130,246,.2); border-color:var(--blueb); }
+.alert-list { display:flex; flex-direction:column; gap:7px; margin-top:10px; }
+.alert-item { display:flex; align-items:center; justify-content:space-between; padding:9px 13px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); }
+.alert-left { display:flex; gap:9px; align-items:center; }
+.alert-dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+.alert-dot.p { background:var(--yellow); }
+.alert-txt { font-size:.85rem; font-weight:500; }
+.alert-sub { font-size:.7rem; color:var(--text2); }
+.alert-del { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1.1rem; transition:color .2s; padding:0 4px; }
+.alert-del:hover { color:var(--red); }
+.info-box { background:var(--bg2); border:1px solid rgba(234,179,8,.2); border-radius:var(--rs); padding:12px 14px; font-size:.78rem; color:var(--text2); line-height:1.6; margin-top:8px; }
+.info-box strong { color:var(--yellow); }
+
+/* ════════════════════════════════════════
+   MISC
+════════════════════════════════════════ */
+.pill { font-size:.65rem; font-weight:700; padding:3px 9px; border-radius:20px; border:1px solid; }
+.pill.g { background:var(--gd); color:var(--green); border-color:rgba(34,197,94,.25); }
+.pill.b { background:var(--bludim); color:var(--blueb); border-color:rgba(59,130,246,.25); }
+.pill.y { background:var(--yd); color:var(--yellow); border-color:rgba(234,179,8,.25); }
+.pill.r { background:var(--rd); color:var(--red); border-color:rgba(239,68,68,.25); }
+.up { color:var(--green); }
+.down { color:var(--red); }
+@keyframes flash { 0%{opacity:1} 50%{opacity:.3} 100%{opacity:1} }
+.flash { animation:flash .4s ease; }
+.toast {
+  position:fixed; bottom:24px; right:24px;
+  background:var(--card2); border:1px solid var(--bhi);
+  border-radius:var(--rs); padding:12px 18px;
+  font-size:.85rem; font-weight:600; color:var(--text);
+  z-index:200; animation:slideUp .3s ease;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+}
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+footer { text-align:center; padding:20px; font-size:.68rem; color:var(--text3); border-top:1px solid var(--border); margin-top:24px; }
+.disc { background:rgba(239,68,68,.05); border:1px solid rgba(239,68,68,.12); border-radius:var(--rs); padding:8px 14px; max-width:700px; margin:0 auto 10px; color:#5a3333; font-size:.65rem; line-height:1.5; }
+
+/* ════════════════════════════════════════
+   GUIDE / INFO BOXES
+════════════════════════════════════════ */
+.page-intro { background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--blueb); border-radius:var(--rs); padding:14px 18px; margin-bottom:18px; }
+.page-intro h3 { font-size:.9rem; font-weight:700; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:7px; }
+.page-intro p { font-size:.78rem; color:var(--text2); line-height:1.7; }
+.guide-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; margin-top:12px; }
+.guide-item { background:var(--card); border:1px solid var(--border); border-radius:var(--rs); padding:12px 14px; }
+.guide-item-title { font-size:.78rem; font-weight:700; color:var(--text); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+.guide-item-body { font-size:.74rem; color:var(--text2); line-height:1.65; }
+/* Signal type guide */
+.sig-type-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(185px,1fr)); gap:8px; margin-bottom:18px; }
+.sig-type-card { border-radius:var(--rs); padding:12px 14px; border:1px solid; }
+.sig-type-name { font-size:.8rem; font-weight:800; margin-bottom:4px; }
+.sig-type-body { font-size:.72rem; line-height:1.6; opacity:.88; }
+/* Timeframe guide */
+.tf-guide { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
+.tf-guide-card { border-radius:var(--rs); padding:16px; border:1px solid; }
+.tf-guide-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.tf-badge-big { font-size:.72rem; font-weight:800; padding:4px 10px; border-radius:6px; }
+.tf-guide-desc { font-size:.78rem; color:var(--text2); line-height:1.7; }
+.tf-guide-action { margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.06); font-size:.76rem; color:var(--text); line-height:1.65; }
+.tf-guide-do { display:flex; flex-direction:column; gap:4px; margin-top:6px; }
+.tf-do-item { display:flex; gap:6px; font-size:.74rem; color:var(--text2); }
+/* Paper trade intro */
+.paper-steps { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px; }
+.paper-step { text-align:center; padding:12px; background:var(--card); border-radius:var(--rs); border:1px solid var(--border); }
+.paper-step-ico { font-size:1.5rem; margin-bottom:5px; }
+.paper-step-txt { font-size:.72rem; color:var(--text2); line-height:1.4; }
+/* Price guide in settings */
+.price-suggest { background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:14px; margin-top:14px; }
+.price-suggest-title { font-size:.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
+.price-suggest-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); }
+.price-suggest-row:last-child { border-bottom:none; }
+.price-suggest-label { font-size:.8rem; font-weight:600; color:var(--text); }
+.price-suggest-vals { display:flex; gap:6px; flex-wrap:wrap; }
+.psv { font-family:var(--mono); font-size:.75rem; padding:3px 9px; border-radius:4px; cursor:pointer; transition:opacity .15s; border:1px solid; }
+.psv:hover { opacity:.75; }
+.psv.up { background:var(--gd); color:var(--green); border-color:rgba(34,197,94,.3); }
+.psv.dn { background:var(--rd); color:var(--red); border-color:rgba(239,68,68,.3); }
+/* Chart legend */
+.chart-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:.72rem; color:var(--text2); }
+.legend-line { width:20px; height:2px; border-radius:1px; flex-shrink:0; }
+.legend-box { width:10px; height:12px; border-radius:2px; flex-shrink:0; }
+/* Indicator desc */
+.ind-desc { font-size:.69rem; color:var(--text3); margin-top:7px; line-height:1.55; border-top:1px solid var(--border); padding-top:7px; }
+/* Manual trade panel */
+.manual-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:14px; }
+.mt-btns { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+.mt-buy { background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.35); color:var(--green); font-weight:700; font-size:.88rem; padding:10px 22px; border-radius:var(--rs); cursor:pointer; font-family:var(--font); transition:all .15s; }
+.mt-buy:hover:not([disabled]) { background:rgba(34,197,94,.22); }
+.mt-sell { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.35); color:var(--red); font-weight:700; font-size:.88rem; padding:10px 22px; border-radius:var(--rs); cursor:pointer; font-family:var(--font); transition:all .15s; }
+.mt-sell:hover:not([disabled]) { background:rgba(239,68,68,.22); }
+.mt-close { background:var(--bludim); border:1px solid var(--border); color:var(--text2); font-weight:600; font-size:.82rem; padding:10px 16px; border-radius:var(--rs); cursor:pointer; font-family:var(--font); transition:all .15s; }
+.mt-close:hover:not([disabled]) { border-color:var(--red); color:var(--red); }
+button[disabled] { opacity:.32; cursor:not-allowed !important; }
+/* AI calc explainer */
+.ai-calc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; margin-top:12px; }
+.ai-calc-item { background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:10px 12px; }
+.ai-calc-name { font-size:.73rem; font-weight:700; color:var(--text); margin-bottom:4px; }
+.ai-calc-body { font-size:.7rem; color:var(--text2); line-height:1.55; }
+.ai-auto-rule { background:rgba(37,99,235,.05); border:1px solid rgba(37,99,235,.18); border-left:3px solid var(--blueb); border-radius:var(--rs); padding:10px 14px; margin-top:12px; font-size:.76rem; color:var(--text2); line-height:1.7; }
+/* ════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════ */
+@media(max-width:1100px) {
+  .stats-bar { grid-template-columns:repeat(3,1fr); }
+  .indicators-grid { grid-template-columns:repeat(2,1fr); }
+  .signal-hero { grid-template-columns:1fr; }
+  .sub-charts { grid-template-columns:1fr; }
+  .tf-guide { grid-template-columns:1fr; }
+  .sig-type-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media(max-width:768px) {
+  main { padding:12px; }
+  .stats-bar { grid-template-columns:repeat(2,1fr); }
+  .g2,.g3,.g4 { grid-template-columns:1fr; }
+  .paper-stats { grid-template-columns:repeat(2,1fr); }
+  .paper-steps { grid-template-columns:repeat(2,1fr); }
+  .nav-price-wrap { display:none; }
+  .nav-menu { display:none; }
+  .settings-grid { grid-template-columns:1fr; }
+  .indicators-grid { grid-template-columns:repeat(2,1fr); }
+  .sig-type-grid { grid-template-columns:1fr; }
+  .tf-guide { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading">
+  <div class="load-btc">₿ Invest AI</div>
+  <div class="spinner"></div>
+  <div class="load-txt">กำลังโหลดข้อมูล Bitcoin จาก CoinGecko...</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">AI</div>
+    <div class="logo-txt">Invest <span>AI</span></div>
+  </div>
+  <div class="nav-price-wrap">
+    <span class="btc-label">BTC</span>
+    <span class="btc-price" id="navPrice">$--,---</span>
+    <span class="btc-chg" id="navChg">--</span>
+  </div>
+  <div class="nav-menu">
+    <button class="nm active" onclick="goTo('s-chart',this)">📊 กราฟ</button>
+    <button class="nm" onclick="goTo('s-signal',this)">🤖 AI Signal</button>
+    <button class="nm" onclick="goTo('s-paper',this)">📈 Paper Trade</button>
+    <button class="nm" onclick="goTo('s-settings',this)">⚙️ ตั้งค่า</button>
+  </div>
+  <div class="nav-r">
+    <span class="api-badge api-live" id="apiBadge">LIVE DATA</span>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <button class="btn-refresh" id="refreshBtn" onclick="refreshData()" title="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════
+     SECTION: CHART
+═══════════════════════════════ -->
+<section id="s-chart" class="active">
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-label">BTC Price</div>
+      <div class="stat-val btc" id="priceUSD">$82,450</div>
+      <div class="stat-sub" id="price24h">--</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">24h Change</div>
+      <div class="stat-val" id="chgVal">--</div>
+      <div class="stat-sub" id="chgPct" style="font-size:.72rem">--</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">24h Volume</div>
+      <div class="stat-val" id="volVal">--</div>
+      <div class="stat-sub" id="volSub" style="color:var(--text2)">USD</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Market Cap</div>
+      <div class="stat-val" id="capVal">--</div>
+      <div class="stat-sub" id="capSub" style="color:var(--text2)">USD</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Last Update</div>
+      <div class="stat-val" id="lastUpd" style="font-size:.85rem">--:--:--</div>
+      <div class="stat-sub" id="nextUpd" style="color:var(--text2)">--</div>
+    </div>
+  </div>
+
+  <!-- Chart Card -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="st"><span class="ic">◉</span> BTC/USD Candlestick</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="overlay-btns">
+          <button class="ov-btn ma20 active" id="btn-ma20" onclick="toggleOverlay('ma20',this)">MA20</button>
+          <button class="ov-btn ma50 active" id="btn-ma50" onclick="toggleOverlay('ma50',this)">MA50</button>
+          <button class="ov-btn bb active" id="btn-bb" onclick="toggleOverlay('bb',this)">BB</button>
+        </div>
+        <div class="tf-tabs">
+          <button class="tf-tab" onclick="setTf(7,this)">7D</button>
+          <button class="tf-tab active" onclick="setTf(30,this)">30D</button>
+          <button class="tf-tab" onclick="setTf(90,this)">90D</button>
+        </div>
+      </div>
+    </div>
+    <div class="chart-ohlc">
+      <div class="ohlc-i"><span class="l">O:</span><span class="v" id="ci-o" style="color:var(--text)">--</span></div>
+      <div class="ohlc-i"><span class="l">H:</span><span class="v" id="ci-h" style="color:var(--green)">--</span></div>
+      <div class="ohlc-i"><span class="l">L:</span><span class="v" id="ci-l" style="color:var(--red)">--</span></div>
+      <div class="ohlc-i"><span class="l">C:</span><span class="v" id="ci-c" style="color:var(--btc)">--</span></div>
+      <div class="ohlc-i"><span class="l">MA20:</span><span class="v" style="color:#ff9933" id="ci-ma20">--</span></div>
+      <div class="ohlc-i"><span class="l">MA50:</span><span class="v" style="color:#a766ff" id="ci-ma50">--</span></div>
+    </div>
+    <canvas id="mainChart" height="400"></canvas>
+    <!-- Chart Legend -->
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-box" style="background:#22c55e"></div><span>แท่งเขียว — ราคาปิดสูงกว่าเปิด (Bullish)</span></div>
+      <div class="legend-item"><div class="legend-box" style="background:#ef4444"></div><span>แท่งแดง — ราคาปิดต่ำกว่าเปิด (Bearish)</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#ff9933"></div><span>เส้นสีส้ม = MA20 (ค่าเฉลี่ย 20 แท่ง)</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#a766ff"></div><span>เส้นสีม่วง = MA50 (ค่าเฉลี่ย 50 แท่ง)</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:rgba(59,130,246,.6);border-top:1px dashed rgba(59,130,246,.6)"></div><span>เส้นน้ำเงินประ = Bollinger Bands</span></div>
+      <div class="legend-item"><div style="font-size:.9rem">▲</div><span style="color:var(--green)">สัญญาณ BUY ของ AI</span></div>
+      <div class="legend-item"><div style="font-size:.9rem">▼</div><span style="color:var(--red)">สัญญาณ SELL ของ AI</span></div>
+    </div>
+  </div>
+
+  <!-- Sub Charts: RSI + MACD -->
+  <div class="sub-charts">
+    <div class="sub-chart-card">
+      <div class="sub-chart-title">
+        <span>RSI (14)</span>
+        <span class="sub-chart-val" id="rsiDisplay">--</span>
+      </div>
+      <canvas id="rsiChart" height="120"></canvas>
+      <div class="rsi-bar-wrap" style="margin-top:10px"><div class="rsi-needle" id="rsiNeedle" style="left:50%"></div></div>
+      <div class="rsi-labels"><span>0 Oversold</span><span>30</span><span>50</span><span>70</span><span>Overbought 100</span></div>
+    </div>
+    <div class="sub-chart-card">
+      <div class="sub-chart-title">
+        <span>MACD (12,26,9)</span>
+        <span class="sub-chart-val" id="macdDisplay">--</span>
+      </div>
+      <canvas id="macdChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <!-- 6 Indicator Cards with Descriptions -->
+  <div class="indicators-grid" id="indGrid">
+    <div class="ind-card">
+      <div class="ind-name">RSI (14) — Relative Strength Index</div>
+      <div class="ind-val" id="ind-rsi-v">--</div>
+      <div class="ind-sig hold" id="ind-rsi-s">Neutral</div>
+      <div class="score-bar"><div class="score-fill" id="ind-rsi-b" style="width:50%;background:var(--yellow)"></div></div>
+      <div class="ind-desc">📌 วัดความแรงของราคา 0–100 · <span style="color:var(--red)">ต่ำกว่า 30 = Oversold (ถูกขายเกินไป → โอกาสซื้อ)</span> · <span style="color:var(--green)">สูงกว่า 70 = Overbought (ถูกซื้อเกินไป → ระวัง)</span></div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">MACD (12, 26, 9)</div>
+      <div class="ind-val" id="ind-macd-v">--</div>
+      <div class="ind-sig hold" id="ind-macd-s">Neutral</div>
+      <div class="score-bar"><div class="score-fill" id="ind-macd-b" style="width:50%;background:var(--yellow)"></div></div>
+      <div class="ind-desc">📌 เส้น momentum จาก 2 EMA · <span style="color:var(--green)">Histogram บวก = แรงซื้อเพิ่ม</span> · <span style="color:var(--red)">Histogram ลบ = แรงขายเพิ่ม</span> · Crossover = สัญญาณแรง</div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">Bollinger Bands (20, 2σ)</div>
+      <div class="ind-val" id="ind-bb-v" style="font-size:.85rem">--</div>
+      <div class="ind-sig hold" id="ind-bb-s">Neutral</div>
+      <div class="score-bar"><div class="score-fill" id="ind-bb-b" style="width:50%;background:var(--yellow)"></div></div>
+      <div class="ind-desc">📌 ช่วงราคาปกติ (±2 SD) · <span style="color:var(--green)">ราคาต่ำกว่าเส้นล่าง = Oversold</span> · <span style="color:var(--red)">สูงกว่าเส้นบน = Overbought</span> · % = ตำแหน่งในช่วง BB</div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">Moving Average (MA20 / MA50)</div>
+      <div class="ind-val" id="ind-ma-v" style="font-size:.85rem">--</div>
+      <div class="ind-sig hold" id="ind-ma-s">Neutral</div>
+      <div class="score-bar"><div class="score-fill" id="ind-ma-b" style="width:50%;background:var(--yellow)"></div></div>
+      <div class="ind-desc">📌 ค่าเฉลี่ยราคา · <span style="color:var(--green)">MA20 ตัด MA50 ขึ้น = Golden Cross (Bullish)</span> · <span style="color:var(--red)">MA20 ตัด MA50 ลง = Death Cross (Bearish)</span></div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">Trend Strength (5 Periods)</div>
+      <div class="ind-val" id="ind-tr-v">--</div>
+      <div class="ind-sig hold" id="ind-tr-s">Neutral</div>
+      <div class="score-bar"><div class="score-fill" id="ind-tr-b" style="width:50%;background:var(--yellow)"></div></div>
+      <div class="ind-desc">📌 วัดความแรงและทิศทาง trend ใน 5 แท่งล่าสุด · <span style="color:var(--green)">+3% ขึ้นไป = Uptrend แรง</span> · <span style="color:var(--red)">-3% ลงไป = Downtrend แรง</span></div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">AI Overall Score</div>
+      <div class="ind-val" id="ind-vt-v">--</div>
+      <div class="ind-sig hold" id="ind-vt-s">Neutral</div>
+      <div class="score-bar"><div class="score-fill" id="ind-vt-b" style="width:50%;background:var(--yellow)"></div></div>
+      <div class="ind-desc">📌 คะแนนรวมจากทุก indicator · <span style="color:var(--green)">คะแนน +4 ขึ้นไป = BUY zone</span> · <span style="color:var(--red)">-4 ลงไป = SELL zone</span> · Range: -13 ถึง +13</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     SECTION: AI SIGNAL
+═══════════════════════════════ -->
+<section id="s-signal">
+  <div class="sh"><div class="st"><span class="ic">🤖</span> AI Signal Analysis</div><small style="color:var(--text2);font-size:.72rem">คำนวณจากข้อมูลจริง — ไม่ใช่คำแนะนำทางการเงิน</small></div>
+
+  <!-- Signal Hero -->
+  <div class="signal-hero" id="signalHero">
+    <div class="signal-main">
+      <div class="signal-tag">Bitcoin / USD · AI Signal</div>
+      <div class="signal-name" id="sigName" style="color:var(--yellow)">HOLD</div>
+      <div class="signal-conf">ความมั่นใจ: <span id="sigConf">--</span>% · Score: <span id="sigScore">--</span></div>
+      <div class="signal-reasons" id="sigReasons">
+        <div class="reason-item"><div class="reason-dot" style="background:var(--text3)"></div><span>กำลังวิเคราะห์...</span></div>
+      </div>
+    </div>
+    <div class="signal-targets" id="sigTargets">
+      <div class="card-title">แนะนำ Entry / SL / TP</div>
+      <div class="target-row"><span class="target-lbl">📍 Entry Zone</span><span class="target-val" id="t-entry" style="color:var(--blueb)">--</span></div>
+      <div class="target-row"><span class="target-lbl">🛡 Stop Loss</span><span class="target-val" id="t-sl" style="color:var(--red)">--</span></div>
+      <div class="target-row"><span class="target-lbl">🎯 Take Profit</span><span class="target-val" id="t-tp" style="color:var(--green)">--</span></div>
+      <div class="target-row"><span class="target-lbl">⚖️ Risk/Reward</span><span class="target-val" id="t-rr" style="color:var(--text2)">1:2.5</span></div>
+    </div>
+  </div>
+
+  <!-- Signal Type Guide -->
+  <div class="page-intro" style="margin-bottom:12px">
+    <h3>📖 AI Signal คืออะไร?</h3>
+    <p>Invest AI คำนวณ <strong style="color:var(--blueb)">คะแนน (Score)</strong> จากตัวชี้วัด 5 ตัว ได้แก่ RSI, MACD, Bollinger Bands, Moving Average และ Trend Strength รวมเป็น Score ตั้งแต่ -13 ถึง +13 แล้วแปลงเป็นสัญญาณ 7 ระดับด้านล่าง</p>
+  </div>
+  <div class="sig-type-grid">
+    <div class="sig-type-card" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.35)">
+      <div class="sig-type-name" style="color:#22c55e">💪 STRONG BUY</div>
+      <div class="sig-type-body" style="color:#86efac">Score ≥ +7 · ตัวชี้วัดส่วนใหญ่ชี้ขึ้นพร้อมกัน · ซื้อได้เลยปริมาณเต็ม · ตั้ง Stop Loss ห่างราว 5%</div>
+    </div>
+    <div class="sig-type-card" style="background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.22)">
+      <div class="sig-type-name" style="color:#4ade80">✅ BUY</div>
+      <div class="sig-type-body" style="color:#86efac">Score +4 ถึง +6 · สัญญาณซื้อชัดเจน · ซื้อปริมาณปกติ · ตั้ง Stop Loss ~4%</div>
+    </div>
+    <div class="sig-type-card" style="background:rgba(34,197,94,.03);border-color:rgba(34,197,94,.14)">
+      <div class="sig-type-name" style="color:#86efac">🟡 WEAK BUY</div>
+      <div class="sig-type-body" style="color:var(--text2)">Score +1 ถึง +3 · สัญญาณซื้ออ่อน · ซื้อน้อยๆ หรือรอยืนยันก่อนเพิ่ม position · Stop Loss ~2.5%</div>
+    </div>
+    <div class="sig-type-card" style="background:rgba(234,179,8,.06);border-color:rgba(234,179,8,.2)">
+      <div class="sig-type-name" style="color:#eab308">⏸ HOLD</div>
+      <div class="sig-type-body" style="color:var(--text2)">Score 0 · สัญญาณไม่ชัดเจน · ถือไว้หรืออยู่นิ่งก่อน รอสัญญาณที่ชัดขึ้น ไม่ควรเปิด position ใหม่</div>
+    </div>
+    <div class="sig-type-card" style="background:rgba(239,68,68,.03);border-color:rgba(239,68,68,.14)">
+      <div class="sig-type-name" style="color:#fca5a5">🟡 WEAK SELL</div>
+      <div class="sig-type-body" style="color:var(--text2)">Score -1 ถึง -3 · สัญญาณขายอ่อน · พิจารณาลด position บางส่วน หรือรอยืนยัน</div>
+    </div>
+    <div class="sig-type-card" style="background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.22)">
+      <div class="sig-type-name" style="color:#f87171">❌ SELL</div>
+      <div class="sig-type-body" style="color:#fca5a5">Score -4 ถึง -6 · สัญญาณขายชัดเจน · ขายหรือลด position · ตั้ง Stop Loss ~4%</div>
+    </div>
+    <div class="sig-type-card" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35)">
+      <div class="sig-type-name" style="color:#ef4444">🚨 STRONG SELL</div>
+      <div class="sig-type-body" style="color:#fca5a5">Score ≤ -7 · ตัวชี้วัดส่วนใหญ่ชี้ลงพร้อมกัน · ขายทันที ออกจาก position · Stop Loss ~5%</div>
+    </div>
+  </div>
+
+  <!-- Indicator Breakdown -->
+  <div class="sh" style="margin-bottom:12px"><div class="st" style="font-size:.9rem"><span class="ic">◈</span> Indicator Breakdown</div></div>
+  <div class="indicators-grid" id="sigIndGrid">
+    <!-- populated by JS -->
+  </div>
+
+  <!-- Elliott Wave Note -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:12px">Elliott Wave Analysis</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div id="ewaveText" style="font-size:.85rem;color:var(--text2);line-height:1.7">กำลังวิเคราะห์ Elliott Wave...</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:var(--rs);padding:14px;border:1px solid var(--border)">
+        <div style="font-size:.68rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">คำแนะนำระยะ</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:.8rem"><span style="color:var(--text2)">Short (1–3 วัน)</span><span id="ew-short" class="pill b">--</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.8rem"><span style="color:var(--text2)">Medium (1–4 สัปดาห์)</span><span id="ew-medium" class="pill b">--</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.8rem"><span style="color:var(--text2)">Long (1–3 เดือน)</span><span id="ew-long" class="pill b">--</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeframe Guide -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:14px">📅 คำแนะนำตามระยะเวลาการลงทุน</div>
+    <div class="tf-guide">
+      <div class="tf-guide-card" style="background:rgba(37,99,235,.05);border-color:rgba(37,99,235,.2)">
+        <div class="tf-guide-header">
+          <span class="tf-badge-big" style="background:rgba(37,99,235,.15);color:var(--blueb)">Short Term</span>
+          <span style="font-size:.72rem;color:var(--text2)">1–3 วัน</span>
+        </div>
+        <div class="tf-guide-desc">ดูสัญญาณ AI ปัจจุบัน RSI และ MACD เป็นหลัก เหมาะสำหรับ trader ที่ต้องการเข้าออกเร็ว ต้องติดตามทุกวัน</div>
+        <div class="tf-guide-action">
+          <strong style="font-size:.75rem;color:var(--text)">🎯 แนะนำให้ทำ:</strong>
+          <div class="tf-guide-do">
+            <div class="tf-do-item"><span style="color:var(--green)">▸</span><span>BUY / STRONG BUY → เข้าซื้อ ตั้ง Take Profit +2.5–5%</span></div>
+            <div class="tf-do-item"><span style="color:var(--red)">▸</span><span>SELL / STRONG SELL → ขายหรือลด position ทันที</span></div>
+            <div class="tf-do-item"><span style="color:var(--yellow)">▸</span><span>WEAK / HOLD → รอสัญญาณชัดขึ้นก่อน อย่าเพิ่งเข้า</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tf-guide-card" style="background:rgba(34,197,94,.04);border-color:rgba(34,197,94,.15)">
+        <div class="tf-guide-header">
+          <span class="tf-badge-big" style="background:rgba(34,197,94,.12);color:var(--green)">Medium Term</span>
+          <span style="font-size:.72rem;color:var(--text2)">1–4 สัปดาห์</span>
+        </div>
+        <div class="tf-guide-desc">ดู MA20/MA50 Crossover, Bollinger Bands และ Elliott Wave เป็นหลัก เหมาะกับการถือช่วงกลาง ดูสัปดาห์ละ 2–3 ครั้งก็พอ</div>
+        <div class="tf-guide-action">
+          <strong style="font-size:.75rem;color:var(--text)">🎯 แนะนำให้ทำ:</strong>
+          <div class="tf-guide-do">
+            <div class="tf-do-item"><span style="color:var(--green)">▸</span><span>Golden Cross + BUY → สะสมซื้อ ตั้ง TP +10–20%</span></div>
+            <div class="tf-do-item"><span style="color:var(--red)">▸</span><span>Death Cross + SELL → ลดหรือขาย position บางส่วน</span></div>
+            <div class="tf-do-item"><span style="color:var(--yellow)">▸</span><span>HOLD → ถือต่อ ดูสัปดาห์หน้า ไม่ต้อง panic</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tf-guide-card" style="background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.15)">
+        <div class="tf-guide-header">
+          <span class="tf-badge-big" style="background:rgba(245,158,11,.12);color:var(--btc)">Long Term</span>
+          <span style="font-size:.72rem;color:var(--text2)">1–3 เดือน+</span>
+        </div>
+        <div class="tf-guide-desc">ดูภาพรวม trend ใหญ่ ราคา BTC เทียบ All-Time High และ Market Cycle เหมาะกับ DCA หรือถือระยะยาว ดูเดือนละ 1–2 ครั้งก็พอ</div>
+        <div class="tf-guide-action">
+          <strong style="font-size:.75rem;color:var(--text)">🎯 แนะนำให้ทำ:</strong>
+          <div class="tf-guide-do">
+            <div class="tf-do-item"><span style="color:var(--green)">▸</span><span>STRONG BUY ต่อเนื่อง → ทยอยซื้อสะสม (DCA)</span></div>
+            <div class="tf-do-item"><span style="color:var(--red)">▸</span><span>STRONG SELL หลายรอบ → พิจารณา Take Profit บางส่วน</span></div>
+            <div class="tf-do-item"><span style="color:var(--yellow)">▸</span><span>HOLD → ถือต่อ อย่า panic sell ดูแนวโน้มใหญ่</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     SECTION: PAPER TRADE
+═══════════════════════════════ -->
+<section id="s-paper">
+  <div class="sh">
+    <div class="st"><span class="ic">📈</span> AI Paper Trading</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="paperOpenCount" class="pill b">-- Open</span>
+      <button onclick="resetPaper()" style="background:var(--rd);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:var(--rs);padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:var(--font)">Reset</button>
+    </div>
+  </div>
+
+  <!-- Paper Trade Intro -->
+  <div class="page-intro" style="margin-bottom:12px">
+    <h3>📋 Paper Trading — ซื้อขายจำลอง ไม่ใช้เงินจริง</h3>
+    <p>เริ่มต้นด้วยเงินสมมติ <strong style="color:var(--btc)">$10,000</strong> แล้วให้ AI หรือตัวคุณเองทำการซื้อขาย BTC จำลอง เพื่อดูว่า <strong style="color:var(--blueb)">ถ้าลงทุนตามสัญญาณ AI จริงๆ ผลลัพธ์จะเป็นอย่างไร</strong> ก่อนนำเงินจริงไปเสี่ยง</p>
+    <div class="paper-steps">
+      <div class="paper-step">
+        <div class="paper-step-ico">🤖</div>
+        <div class="paper-step-txt">AI วิเคราะห์<br>5 ตัวชี้วัดพร้อมกัน</div>
+      </div>
+      <div class="paper-step">
+        <div class="paper-step-ico">⚡</div>
+        <div class="paper-step-txt">คะแนนรวม → สัญญาณ<br>BUY / HOLD / SELL</div>
+      </div>
+      <div class="paper-step">
+        <div class="paper-step-ico">📝</div>
+        <div class="paper-step-txt">บันทึกซื้อขาย<br>อัตโนมัติ (Auto)</div>
+      </div>
+      <div class="paper-step">
+        <div class="paper-step-ico">📊</div>
+        <div class="paper-step-txt">วัด Win Rate<br>และผลตอบแทน</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Calculation Explainer -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:8px">🤖 AI คำนวณอะไร และแนะนำให้ทำอะไร?</div>
+    <p style="font-size:.78rem;color:var(--text2);line-height:1.65">AI รวม <strong style="color:var(--text)">5 ตัวชี้วัด</strong> เป็นคะแนน (-13 ถึง +13) แล้วแปลงเป็นสัญญาณ และตัดสินใจ paper trade ตามกฎด้านล่าง</p>
+    <div class="ai-calc-grid">
+      <div class="ai-calc-item">
+        <div class="ai-calc-name">📉 RSI (14) — Momentum</div>
+        <div class="ai-calc-body">วัดว่าราคาถูกซื้อหรือขายมากเกินไปหรือเปล่า<br><span style="color:var(--green)">RSI &lt; 30 → ซื้อเกินไปมาก → ควร BUY</span><br><span style="color:var(--red)">RSI &gt; 70 → ซื้อเกินไปมาก → ควร SELL</span></div>
+      </div>
+      <div class="ai-calc-item">
+        <div class="ai-calc-name">📈 MACD (12,26,9) — Crossover</div>
+        <div class="ai-calc-body">วัด momentum จากเส้นค่าเฉลี่ย 2 เส้น<br><span style="color:var(--green)">Histogram ตัดขึ้น → BUY signal</span><br><span style="color:var(--red)">Histogram ตัดลง → SELL signal</span></div>
+      </div>
+      <div class="ai-calc-item">
+        <div class="ai-calc-name">🎯 Bollinger Bands — Range</div>
+        <div class="ai-calc-body">วัดว่าราคาอยู่ตรงไหนของช่วงราคาปกติ<br><span style="color:var(--green)">ต่ำกว่าเส้นล่าง → ราคาถูกเกินไป → BUY</span><br><span style="color:var(--red)">สูงกว่าเส้นบน → ราคาแพงเกินไป → SELL</span></div>
+      </div>
+      <div class="ai-calc-item">
+        <div class="ai-calc-name">📊 Moving Average — Trend</div>
+        <div class="ai-calc-body">เทรนด์ระยะกลางจาก MA20 และ MA50<br><span style="color:var(--green)">MA20 &gt; MA50 → Golden Cross → BUY</span><br><span style="color:var(--red)">MA20 &lt; MA50 → Death Cross → SELL</span></div>
+      </div>
+      <div class="ai-calc-item">
+        <div class="ai-calc-name">⚡ Trend Strength — 5 แท่ง</div>
+        <div class="ai-calc-body">ดูการเคลื่อนไหวราคาใน 5 แท่งล่าสุด<br><span style="color:var(--green)">+3% ขึ้นไป → momentum ขาขึ้น</span><br><span style="color:var(--red)">-3% ลงไป → momentum ขาลง</span></div>
+      </div>
+    </div>
+    <div class="ai-auto-rule">
+      <strong style="color:var(--text)">🔄 กฎ Auto-Trade:</strong> ระบบจะเปิด position ใหม่เมื่อ signal เป็น <strong style="color:var(--green)">BUY</strong> หรือ <strong style="color:var(--green)">STRONG BUY</strong> (score ≥ +4) และจะเปิด Short เมื่อเป็น <strong style="color:var(--red)">SELL</strong> หรือ <strong style="color:var(--red)">STRONG SELL</strong> (score ≤ -4) · สัญญาณ <span style="color:var(--yellow)">WEAK / HOLD</span> จะไม่เปิด position ใหม่ แต่จะรอยืนยัน · ถ้าอยากทดสอบทันที ใช้ปุ่ม Manual ด้านล่าง
+    </div>
+  </div>
+
+  <!-- Manual Trade Panel -->
+  <div class="manual-panel">
+    <div class="card-title" style="margin-bottom:4px">🎮 เปิด Position ด้วยตนเอง (Manual Trade)</div>
+    <p style="font-size:.74rem;color:var(--text2);margin-bottom:2px">ราคาเข้า = ราคา BTC ปัจจุบัน · ราคาออก = ราคา BTC ตอนที่คุณกด <em>ปิด Position</em></p>
+    <div class="mt-btns">
+      <button class="mt-buy" id="btn-manual-buy" onclick="manualTrade('buy')">🟢 เปิด BUY</button>
+      <button class="mt-sell" id="btn-manual-sell" onclick="manualTrade('sell')">🔴 เปิด SELL</button>
+      <button class="mt-close" id="btn-manual-close" onclick="closeOpenTrade()" disabled>❌ ปิด Position</button>
+      <span style="font-size:.75rem;color:var(--text2);margin-left:auto" id="mt-status">ราคาปัจจุบัน: <span class="btc" style="font-family:var(--mono);color:var(--btc);font-weight:700" id="mt-price">--</span></span>
+    </div>
+  </div>
+
+  <div class="paper-stats">
+    <div class="ps-card"><div class="ps-label">Win Rate</div><div class="ps-val g" id="ps-wr">--%</div><div class="ps-sub" id="ps-wrsub">-- trades</div></div>
+    <div class="ps-card"><div class="ps-label">Total Return</div><div class="ps-val g" id="ps-ret">--</div><div class="ps-sub">เริ่มต้น $10,000</div></div>
+    <div class="ps-card"><div class="ps-label">Portfolio Value</div><div class="ps-val b" id="ps-val">$10,000</div><div class="ps-sub" id="ps-vsub">0 trades</div></div>
+    <div class="ps-card"><div class="ps-label">Unrealized P&L</div><div class="ps-val" id="ps-unrealized">--</div><div class="ps-sub" id="ps-usub">open position</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Portfolio Performance</div>
+      <canvas id="perfChart" height="200"></canvas>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">Trade History</div>
+      </div>
+      <div class="trade-list" id="tradeList">
+        <div class="empty-trades">ยังไม่มีรายการ รอสัญญาณ AI...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     SECTION: SETTINGS
+═══════════════════════════════ -->
+<section id="s-settings">
+  <div class="sh"><div class="st"><span class="ic">⚙️</span> ตั้งค่า</div></div>
+  <div class="settings-grid">
+    <!-- Price Alerts -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">🔔 Price Alerts</div>
+      <label class="form-label">ราคาเป้าหมาย ($)</label>
+      <input type="number" class="form-input" id="alPrice" placeholder="เช่น 90000">
+      <label class="form-label">เงื่อนไข</label>
+      <select class="form-input" id="alCond">
+        <option value="above">ราคาขึ้นถึง (≥)</option>
+        <option value="below">ราคาลงถึง (≤)</option>
+      </select>
+      <button class="btn-primary" onclick="addAlert()">+ เพิ่ม Alert</button>
+      <div class="alert-list" id="alertList"></div>
+
+      <!-- Price Level Guide -->
+      <div class="price-suggest" id="priceSuggestBox">
+        <div class="price-suggest-title">💡 แนวทางตั้งราคาแจ้งเตือน (คลิกที่ราคาเพื่อกรอกอัตโนมัติ)</div>
+        <div class="price-suggest-row">
+          <span class="price-suggest-label">⚡ Short (1–3 วัน)</span>
+          <div class="price-suggest-vals" id="ps-short"><span style="color:var(--text3);font-size:.72rem">กำลังโหลด...</span></div>
+        </div>
+        <div class="price-suggest-row">
+          <span class="price-suggest-label">📅 Medium (1–4 สัปดาห์)</span>
+          <div class="price-suggest-vals" id="ps-medium"></div>
+        </div>
+        <div class="price-suggest-row">
+          <span class="price-suggest-label">🎯 Long (1–3 เดือน)</span>
+          <div class="price-suggest-vals" id="ps-long"></div>
+        </div>
+        <div style="font-size:.68rem;color:var(--text3);margin-top:8px;line-height:1.55">🟢 สีเขียว = ราคาขึ้นถึง (Above alert) &nbsp;·&nbsp; 🔴 สีแดง = ราคาลงถึง (Below alert) &nbsp;·&nbsp; คำนวณจากราคา BTC ปัจจุบัน</div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">📣 การแจ้งเตือน</div>
+      <div class="tog-row">
+        <div class="tog-info"><div class="tog-name">Browser Notifications</div><div class="tog-sub">แจ้งเตือนผ่าน browser โดยตรง</div></div>
+        <label class="toggle"><input type="checkbox" id="tog-browser" onchange="toggleBrowserNotif(this)"><span class="toggle-s"></span></label>
+      </div>
+      <div class="tog-row">
+        <div class="tog-info"><div class="tog-name">BUY Signal Alert</div><div class="tog-sub">แจ้งเมื่อ AI สร้างสัญญาณซื้อ</div></div>
+        <label class="toggle"><input type="checkbox" id="tog-buy" checked><span class="toggle-s"></span></label>
+      </div>
+      <div class="tog-row">
+        <div class="tog-info"><div class="tog-name">SELL Signal Alert</div><div class="tog-sub">แจ้งเมื่อ AI สร้างสัญญาณขาย</div></div>
+        <label class="toggle"><input type="checkbox" id="tog-sell" checked><span class="toggle-s"></span></label>
+      </div>
+      <div class="tog-row" style="border-bottom:none">
+        <div class="tog-info"><div class="tog-name">Price Alert</div><div class="tog-sub">แจ้งเมื่อราคาถึงเป้า</div></div>
+        <label class="toggle"><input type="checkbox" id="tog-price" checked><span class="toggle-s"></span></label>
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="card-title" style="margin-bottom:12px">📱 Line Notify</div>
+        <label class="form-label">Line Notify Token</label>
+        <input type="password" class="form-input" id="lineToken" placeholder="วาง Token ที่นี่...">
+        <button class="btn-test" onclick="testLine()">ทดสอบ Line Notify</button>
+        <div class="info-box" style="margin-top:10px">
+          <strong>วิธีรับ Token:</strong><br>
+          1. ไปที่ <strong>notify-bot.line.me/th</strong><br>
+          2. Login → "Generate token"<br>
+          3. สร้าง token สำหรับ "1-on-1 Chat"<br>
+          4. Copy token มาวางด้านบน
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Settings -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-title" style="margin-bottom:14px">🔄 การตั้งค่าข้อมูล</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      <div>
+        <label class="form-label">Auto-refresh interval</label>
+        <select class="form-input" id="refreshInterval" onchange="setRefreshInterval(this.value)">
+          <option value="30">30 วินาที</option>
+          <option value="60" selected>1 นาที</option>
+          <option value="120">2 นาที</option>
+          <option value="300">5 นาที</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Default Timeframe</label>
+        <select class="form-input" id="defTf">
+          <option value="7">7 วัน</option>
+          <option value="30" selected>30 วัน</option>
+          <option value="90">90 วัน</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Paper Trade Mode</label>
+        <select class="form-input" id="paperMode">
+          <option value="auto">Auto (ตาม AI Signal)</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" style="margin-top:14px;max-width:200px" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="disc">⚠️ คำเตือน: การลงทุนมีความเสี่ยง ผลตอบแทนในอดีตไม่ได้รับประกันอนาคต Invest AI เป็นเครื่องมือช่วยวิเคราะห์ส่วนตัว ไม่ใช่ที่ปรึกษาการเงิน กรุณาตัดสินใจด้วยตนเอง</div>
+  <div>© 2025 Invest AI · Personal Bitcoin Analysis Tool · Powered by CoinGecko API</div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+const S = {
+  candles: [],
+  currentPrice: null,
+  marketData: null,
+  signal: null,
+  tfDays: 30,
+  overlays: { ma20:true, ma50:true, bb:true },
+  refreshTimer: null,
+  refreshSec: 60,
+  countdown: 60,
+  countdownTimer: null,
+  isLive: false,
+  paperTrades: [],
+  alerts: [],
+  lastSignal: null,
+  rsiHistory: [],
+  macdHistory: [],
+  perfHistory: [],
+};
+
+/* ════════════════════════════════════════
+   CHART INSTANCES
+════════════════════════════════════════ */
+const CI = { rsi:null, macd:null, perf:null };
+
+/* ════════════════════════════════════════
+   API — CoinGecko
+════════════════════════════════════════ */
+const BASE = 'https://api.coingecko.com/api/v3';
+
+async function fetchOHLC(days) {
+  const r = await fetch(`${BASE}/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`);
+  if(!r.ok) throw new Error('OHLC fetch failed');
+  const data = await r.json();
+  return data.map(([t,o,h,l,c]) => ({t,o,h,l,c}));
+}
+
+async function fetchPrice() {
+  const r = await fetch(`${BASE}/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
+  if(!r.ok) throw new Error('Price fetch failed');
+  return (await r.json()).bitcoin;
+}
+
+/* ════════════════════════════════════════
+   MOCK DATA (fallback)
+════════════════════════════════════════ */
+function genMockCandles(n=120) {
+  let p = 82000, arr = [];
+  const now = Date.now();
+  for(let i=n; i>=0; i--) {
+    const o = p;
+    const c = o + (Math.random()-.47)*1800;
+    const h = Math.max(o,c)+Math.random()*600;
+    const l = Math.min(o,c)-Math.random()*600;
+    arr.push({t: now - i*4*3600*1000, o, h, l, c});
+    p = c;
+  }
+  return arr;
+}
+
+/* ════════════════════════════════════════
+   TECHNICAL INDICATORS
+════════════════════════════════════════ */
+function sma(arr, p) {
+  return arr.map((_,i,a) => i<p-1 ? null : a.slice(i-p+1,i+1).reduce((s,v)=>s+v,0)/p);
+}
+
+function ema(arr, p) {
+  const k = 2/(p+1), res=[arr[0]];
+  for(let i=1;i<arr.length;i++) res.push(arr[i]*k+res[i-1]*(1-k));
+  return res;
+}
+
+function calcRSI(candles, p=14) {
+  const closes = candles.map(d=>d.c);
+  if(closes.length < p+1) return [];
+  const gains=[], losses=[];
+  for(let i=1;i<closes.length;i++){
+    const d=closes[i]-closes[i-1];
+    gains.push(d>0?d:0); losses.push(d<0?-d:0);
+  }
+  let ag=gains.slice(0,p).reduce((a,b)=>a+b)/p;
+  let al=losses.slice(0,p).reduce((a,b)=>a+b)/p;
+  const rsi=[100-100/(1+ag/Math.max(al,1e-10))];
+  for(let i=p;i<gains.length;i++){
+    ag=(ag*(p-1)+gains[i])/p; al=(al*(p-1)+losses[i])/p;
+    rsi.push(100-100/(1+ag/Math.max(al,1e-10)));
+  }
+  return rsi;
+}
+
+function calcMACD(candles, f=12, s=26, sig=9) {
+  const closes = candles.map(d=>d.c);
+  const e12=ema(closes,f), e26=ema(closes,s);
+  const macdLine=e12.map((v,i)=>v-e26[i]);
+  const sigArr=ema(macdLine.slice(s-1),sig);
+  const sigFull=new Array(s-1).fill(null).concat(sigArr);
+  const hist=macdLine.map((v,i)=>sigFull[i]!=null?v-sigFull[i]:null);
+  return {macd:macdLine, signal:sigFull, hist};
+}
+
+function calcBB(candles, p=20, std=2) {
+  const closes=candles.map(d=>d.c);
+  return closes.map((_,i,arr)=>{
+    if(i<p-1) return {u:null,m:null,l:null};
+    const sl=arr.slice(i-p+1,i+1);
+    const avg=sl.reduce((a,b)=>a+b)/p;
+    const sd=Math.sqrt(sl.reduce((s,v)=>s+Math.pow(v-avg,2),0)/p);
+    return {u:avg+std*sd, m:avg, l:avg-std*sd};
+  });
+}
+
+/* ════════════════════════════════════════
+   AI SIGNAL GENERATION
+════════════════════════════════════════ */
+function generateSignal(candles) {
+  if(candles.length < 50) return null;
+  const n = candles.length-1;
+  const closes = candles.map(d=>d.c);
+  const rsi = calcRSI(candles, 14);
+  const {macd, signal:sigLine, hist} = calcMACD(candles);
+  const bb = calcBB(candles, 20);
+  const ma20arr = sma(closes, 20);
+  const ma50arr = sma(closes, 50);
+
+  const lastRSI = rsi[rsi.length-1];
+  const lastHist = hist[n], prevHist = hist[n-1];
+  const lastClose = closes[n];
+  const lastBB = bb[n], prevBB = bb[n-1];
+  const lastMA20 = ma20arr[n], lastMA50 = ma50arr[n];
+
+  let score=0;
+  const reasons=[], indicators=[];
+
+  // RSI
+  let rsiSig, rsiScore=0;
+  if(lastRSI < 28)      { rsiScore=3; rsiSig='BUY'; reasons.push('🟢 RSI ต่ำมาก ('+lastRSI.toFixed(1)+') — Oversold แรง'); }
+  else if(lastRSI < 38) { rsiScore=2; rsiSig='BUY'; reasons.push('🟢 RSI Oversold ('+lastRSI.toFixed(1)+')'); }
+  else if(lastRSI < 47) { rsiScore=1; rsiSig='BUY'; reasons.push('🟡 RSI ใกล้ Oversold zone'); }
+  else if(lastRSI > 72) { rsiScore=-3; rsiSig='SELL'; reasons.push('🔴 RSI สูงมาก ('+lastRSI.toFixed(1)+') — Overbought แรง'); }
+  else if(lastRSI > 62) { rsiScore=-2; rsiSig='SELL'; reasons.push('🔴 RSI Overbought ('+lastRSI.toFixed(1)+')'); }
+  else if(lastRSI > 53) { rsiScore=-1; rsiSig='SELL'; reasons.push('🟡 RSI ใกล้ Overbought'); }
+  else { rsiSig='HOLD'; }
+  score+=rsiScore;
+  indicators.push({name:'RSI (14)', val:lastRSI.toFixed(1), sig:rsiSig, score:rsiScore});
+
+  // MACD
+  let macdSig, macdScore=0;
+  if(lastHist!=null && prevHist!=null) {
+    if(lastHist>0 && prevHist<=0)       { macdScore=3; macdSig='BUY'; reasons.push('🟢 MACD Bullish Crossover — สัญญาณซื้อแรง'); }
+    else if(lastHist<0 && prevHist>=0)  { macdScore=-3; macdSig='SELL'; reasons.push('🔴 MACD Bearish Crossover — สัญญาณขายแรง'); }
+    else if(lastHist>0 && lastHist>Math.abs(prevHist)) { macdScore=1; macdSig='BUY'; reasons.push('🟡 MACD Histogram เพิ่มขึ้น (Bullish momentum)'); }
+    else if(lastHist<0 && lastHist<-Math.abs(prevHist)) { macdScore=-1; macdSig='SELL'; reasons.push('🟡 MACD Histogram ลดลง (Bearish momentum)'); }
+    else if(lastHist>0) { macdScore=1; macdSig='BUY'; }
+    else { macdScore=-1; macdSig='SELL'; }
+  } else { macdSig='HOLD'; }
+  score+=macdScore;
+  indicators.push({name:'MACD', val:lastHist!=null?(lastHist>0?'+':'')+lastHist.toFixed(0):'--', sig:macdSig, score:macdScore});
+
+  // Bollinger Bands
+  let bbSig, bbScore=0, bbLabel='--';
+  if(lastBB.u!=null) {
+    const bbPct = ((lastClose-lastBB.l)/(lastBB.u-lastBB.l)*100);
+    bbLabel = bbPct.toFixed(0)+'%';
+    if(lastClose < lastBB.l)     { bbScore=3; bbSig='BUY'; reasons.push('🟢 ราคาต่ำกว่า Lower Bollinger Band — Oversold'); }
+    else if(lastClose > lastBB.u){ bbScore=-3; bbSig='SELL'; reasons.push('🔴 ราคาสูงกว่า Upper Bollinger Band — Overbought'); }
+    else if(bbPct < 25)          { bbScore=1; bbSig='BUY'; reasons.push('🟡 ราคาอยู่โซนล่าง BB ('+bbPct.toFixed(0)+'%)'); }
+    else if(bbPct > 75)          { bbScore=-1; bbSig='SELL'; reasons.push('🟡 ราคาอยู่โซนบน BB ('+bbPct.toFixed(0)+'%)'); }
+    else { bbSig='HOLD'; }
+  } else { bbSig='HOLD'; }
+  score+=bbScore;
+  indicators.push({name:'Bollinger Bands', val:bbLabel, sig:bbSig, score:bbScore});
+
+  // Moving Average
+  let maSig, maScore=0;
+  if(lastMA20!=null && lastMA50!=null) {
+    if(lastMA20>lastMA50 && lastClose>lastMA20)      { maScore=2; maSig='BUY'; reasons.push('🟢 ราคา > MA20 > MA50 — Bullish Alignment'); }
+    else if(lastMA20<lastMA50 && lastClose<lastMA20) { maScore=-2; maSig='SELL'; reasons.push('🔴 ราคา < MA20 < MA50 — Bearish Alignment'); }
+    else if(lastMA20>lastMA50)                       { maScore=1; maSig='BUY'; reasons.push('🟡 MA20 > MA50 (Golden Cross zone)'); }
+    else if(lastMA20<lastMA50)                       { maScore=-1; maSig='SELL'; reasons.push('🟡 MA20 < MA50 (Death Cross zone)'); }
+    else { maSig='HOLD'; }
+  } else { maSig='HOLD'; }
+  score+=maScore;
+  indicators.push({name:'Moving Average', val:lastMA20!=null?'$'+fmtShort(lastMA20):'--', sig:maSig, score:maScore});
+
+  // Trend (price momentum over 5 periods)
+  let trSig, trScore=0;
+  if(candles.length>=6) {
+    const change5 = (lastClose - candles[n-5].c)/candles[n-5].c*100;
+    if(change5>3)       { trScore=1; trSig='BUY'; }
+    else if(change5<-3) { trScore=-1; trSig='SELL'; }
+    else { trSig='HOLD'; }
+    indicators.push({name:'Trend Strength', val:(change5>0?'+':'')+change5.toFixed(1)+'%', sig:trSig, score:trScore});
+    score+=trScore;
+  }
+
+  // Volume (compare last 3 vs previous 3)
+  let vtSig, vtScore=0;
+  indicators.push({name:'Volume Trend', val:'N/A', sig:'HOLD', score:0});
+
+  // Determine final signal
+  const maxScore = 13; // max possible
+  const confRaw = Math.abs(score)/maxScore*100;
+  const confidence = Math.min(95, Math.max(35, 40+confRaw*0.55));
+
+  let sigName, sigColor;
+  if(score>=7)      { sigName='STRONG BUY'; sigColor='#22c55e'; }
+  else if(score>=4) { sigName='BUY'; sigColor='#22c55e'; }
+  else if(score>=1) { sigName='WEAK BUY'; sigColor='#86efac'; }
+  else if(score<=-7){ sigName='STRONG SELL'; sigColor='#ef4444'; }
+  else if(score<=-4){ sigName='SELL'; sigColor='#ef4444'; }
+  else if(score<=-1){ sigName='WEAK SELL'; sigColor='#fca5a5'; }
+  else              { sigName='HOLD'; sigColor='#eab308'; }
+
+  // Entry/SL/TP
+  const isBuy = sigName.includes('BUY');
+  const isSell = sigName.includes('SELL');
+  const slPct = sigName.includes('STRONG')?0.055 : sigName.includes('WEAK')?0.025 : 0.04;
+  const tpPct = slPct*2.5;
+  const targets = (isBuy||isSell) ? {
+    entry: lastClose,
+    sl: isBuy ? lastClose*(1-slPct) : lastClose*(1+slPct),
+    tp: isBuy ? lastClose*(1+tpPct) : lastClose*(1-tpPct),
+    rr: '1:2.5',
+  } : null;
+
+  // Elliott Wave guess (simplified)
+  const recentCloses = closes.slice(-20);
+  const maxR = Math.max(...recentCloses), minR = Math.min(...recentCloses);
+  const posInRange = (lastClose-minR)/(maxR-minR);
+  let ewaveDesc, ewShort, ewMed, ewLong;
+  if(posInRange>0.85)       { ewaveDesc='ราคาอยู่ใกล้จุดสูงสุดของช่วง — อาจเป็น Wave 5 หรือ Wave C (ช่วง Corrective) เตรียมรับมือ Pullback'; ewShort='Cautious'; ewMed='HOLD'; ewLong='HOLD'; }
+  else if(posInRange<0.15)  { ewaveDesc='ราคาอยู่ใกล้จุดต่ำสุดของช่วง — อาจเป็นจุดสิ้นสุด Wave 2 หรือ Wave C Correction โอกาสเริ่ม Wave ใหม่ขาขึ้น'; ewShort='Watch'; ewMed='BUY'; ewLong='BUY'; }
+  else if(posInRange>0.5 && score>3) { ewaveDesc='ราคาอยู่ในช่วงกลาง-บน พร้อม momentum เป็นบวก — น่าจะอยู่ใน Wave 3 ซึ่งเป็นคลื่นที่แรงที่สุด'; ewShort='BUY'; ewMed='BUY'; ewLong='BUY'; }
+  else if(posInRange<0.5 && score<-3){ ewaveDesc='ราคาอยู่ในช่วงกลาง-ล่าง momentum เป็นลบ — อาจอยู่ใน Wave 3 ขาลงหรือ Wave C Correction'; ewShort='SELL'; ewMed='SELL'; ewLong='HOLD'; }
+  else { ewaveDesc='ราคาอยู่ในช่วง Consolidation — ยังไม่ชัดเจนว่าเป็น Wave ไหน ควรรอสัญญาณยืนยัน'; ewShort='HOLD'; ewMed='HOLD'; ewLong='HOLD'; }
+
+  return { sigName, sigColor, confidence:confidence.toFixed(0), score, reasons, indicators, targets, lastClose, lastRSI, lastHist, ewaveDesc, ewShort, ewMed, ewLong, isBuy, isSell, rsiArr:rsi, macdHist:hist, macdLine:macd };
+}
+
+/* ════════════════════════════════════════
+   RENDER UI
+════════════════════════════════════════ */
+function fmtUSD(n) { return '$'+Math.round(n).toLocaleString(); }
+function fmtShort(n) {
+  if(n>=1e12) return (n/1e12).toFixed(2)+'T';
+  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(2)+'K';
+  return n.toFixed(2);
+}
+
+function renderStats(priceData) {
+  if(!priceData) return;
+  const price=priceData.usd||0, chg=priceData.usd_24h_change||0, vol=priceData.usd_24h_vol||0, cap=priceData.usd_market_cap||0;
+  const isUp = chg>=0;
+  el('priceUSD').textContent = fmtUSD(price);
+  el('price24h').textContent = (isUp?'▲':'▼') + ' '+Math.abs(chg).toFixed(2)+'%';
+  el('price24h').className = 'stat-sub ' + (isUp?'up':'down');
+  el('chgVal').textContent = (isUp?'+':'')+chg.toFixed(2)+'%';
+  el('chgVal').className = 'stat-val ' + (isUp?'up':'down');
+  el('chgPct').textContent = isUp?'ขาขึ้น 24h':'ขาลง 24h';
+  el('volVal').textContent = '$'+fmtShort(vol);
+  el('capVal').textContent = '$'+fmtShort(cap);
+  el('navPrice').textContent = fmtUSD(price);
+  el('navChg').textContent = (isUp?'+':'')+chg.toFixed(2)+'%';
+  el('navChg').className = 'btc-chg ' + (isUp?'up':'down');
+  el('lastUpd').textContent = new Date().toLocaleTimeString('th-TH');
+}
+
+function renderIndicatorCards(sig) {
+  if(!sig) return;
+  const items=[
+    ['ind-rsi','RSI (14)',sig.lastRSI.toFixed(1),getRSISig(sig.lastRSI)],
+    ['ind-macd','MACD',sig.lastHist!=null?(sig.lastHist>0?'+':'')+sig.lastHist.toFixed(0):'--',sig.lastHist>0?'buy':sig.lastHist<0?'sell':'hold'],
+  ];
+  sig.indicators.forEach((ind,i)=>{
+    const id=['ind-rsi','ind-macd','ind-bb','ind-ma','ind-tr','ind-vt'][i];
+    if(!id) return;
+    const sigLow = ind.sig.toLowerCase();
+    const el2 = document.getElementById(id+'-v');
+    const el3 = document.getElementById(id+'-s');
+    const el4 = document.getElementById(id+'-b');
+    if(el2) el2.textContent = ind.val;
+    if(el3) {
+      el3.textContent = ind.sig;
+      el3.className = 'ind-sig ' + (sigLow==='buy'?'buy':sigLow==='sell'?'sell':'hold');
+      el3.style.color = sigLow==='buy'?'var(--green)':sigLow==='sell'?'var(--red)':'var(--yellow)';
+    }
+    if(el4) {
+      const pct = 50 + (ind.score/3)*50;
+      el4.style.width = Math.min(100,Math.max(0,pct))+'%';
+      el4.style.background = sigLow==='buy'?'var(--green)':sigLow==='sell'?'var(--red)':'var(--yellow)';
+    }
+  });
+}
+
+function getRSISig(r) { return r<30||r<40?'buy':r>70||r>60?'sell':'hold'; }
+
+function renderSignalSection(sig) {
+  if(!sig) return;
+  el('sigName').textContent = sig.sigName;
+  el('sigName').style.color = sig.sigColor;
+  el('sigConf').textContent = sig.confidence;
+  el('sigScore').textContent = (sig.score>0?'+':'')+sig.score;
+  el('sigReasons').innerHTML = sig.reasons.slice(0,5).map(r=>`<div class="reason-item"><div class="reason-dot" style="background:${r.includes('🟢')?'var(--green)':r.includes('🔴')?'var(--red)':'var(--yellow)'}"></div><span>${r.replace(/[🟢🔴🟡]/g,'').trim()}</span></div>`).join('');
+
+  // Targets
+  if(sig.targets) {
+    el('t-entry').textContent = fmtUSD(sig.targets.entry);
+    el('t-sl').textContent = fmtUSD(sig.targets.sl);
+    el('t-tp').textContent = fmtUSD(sig.targets.tp);
+    el('t-rr').textContent = sig.targets.rr;
+  } else {
+    el('t-entry').textContent = 'รอสัญญาณชัดขึ้น';
+    el('t-sl').textContent = '--'; el('t-tp').textContent = '--';
+  }
+
+  // Indicator breakdown in signal section
+  const grid = document.getElementById('sigIndGrid');
+  if(grid) {
+    grid.innerHTML = sig.indicators.map(ind=>{
+      const s=ind.sig.toLowerCase();
+      const col=s==='buy'?'var(--green)':s==='sell'?'var(--red)':'var(--yellow)';
+      const pct=Math.min(100,Math.max(0,50+(ind.score/3)*50));
+      return `<div class="ind-card">
+        <div class="ind-name">${ind.name}</div>
+        <div class="ind-val" style="color:${col}">${ind.val}</div>
+        <div class="ind-sig ${s}" style="color:${col}">${ind.sig}</div>
+        <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${col}"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Elliott Wave
+  el('ewaveText').innerHTML = sig.ewaveDesc;
+  const ewPills = {buy:'pill g',sell:'pill r',hold:'pill y',watch:'pill y',cautious:'pill y'};
+  ['short','medium','long'].forEach(t=>{
+    const v=sig[`ew${t.charAt(0).toUpperCase()+t.slice(1)}`]||'HOLD';
+    const pill=document.getElementById('ew-'+t);
+    if(pill) { pill.textContent=v; pill.className='pill '+(v==='BUY'?'g':v==='SELL'?'r':'y'); }
+  });
+}
+
+function renderRSI(sig) {
+  if(!sig||!sig.rsiArr.length) return;
+  const rsi = sig.rsiArr;
+  const last = rsi[rsi.length-1];
+  el('rsiDisplay').textContent = last.toFixed(1);
+  el('rsiDisplay').style.color = last<30?'var(--green)':last>70?'var(--red)':'var(--yellow)';
+  el('rsiNeedle').style.left = last+'%';
+  el('ind-rsi-v').textContent = last.toFixed(1);
+
+  const labels = S.candles.slice(-rsi.length).map((_,i)=>'');
+  const ctx = document.getElementById('rsiChart');
+  if(!ctx) return;
+  if(CI.rsi) CI.rsi.destroy();
+  CI.rsi = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[{
+      data:rsi, borderColor:'#3b82f6', borderWidth:1.5, fill:false,
+      tension:.3, pointRadius:0,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{display:false},
+        annotation:{ /* no plugin */ },
+        tooltip:{enabled:false}
+      },
+      scales:{
+        x:{display:false},
+        y:{
+          min:0,max:100,
+          ticks:{color:'#4a5568',font:{size:9},stepSize:25},
+          grid:{color:'rgba(30,80,180,.15)'},
+        }
+      }
+    }
+  });
+}
+
+function renderMACD(sig) {
+  if(!sig) return;
+  const hist=sig.macdHist.filter(v=>v!=null);
+  const last=hist[hist.length-1]||0;
+  el('macdDisplay').textContent = (last>0?'+':'')+last.toFixed(0);
+  el('macdDisplay').style.color = last>0?'var(--green)':'var(--red)';
+
+  const ctx=document.getElementById('macdChart');
+  if(!ctx) return;
+  if(CI.macd) CI.macd.destroy();
+  const validHist=sig.macdHist.filter(v=>v!=null);
+  const labels=validHist.map(()=>'');
+  CI.macd = new Chart(ctx, {
+    type:'bar',
+    data:{labels, datasets:[{
+      data:validHist,
+      backgroundColor:validHist.map(v=>v>0?'rgba(34,197,94,.5)':'rgba(239,68,68,.5)'),
+      borderColor:validHist.map(v=>v>0?'var(--green)':'var(--red)'),
+      borderWidth:1,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{
+        x:{display:false},
+        y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(30,80,180,.15)'}},
+      }
+    }
+  });
+}
+
+/* ════════════════════════════════════════
+   CANDLESTICK CHART (Canvas)
+════════════════════════════════════════ */
+function drawCandles() {
+  const canvas = document.getElementById('mainChart');
+  if(!canvas||!S.candles.length) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.offsetWidth||900, H=400;
+  canvas.width=W; canvas.height=H;
+  const D=S.candles;
+  const n=D.length;
+  const pL=72, pR=68, pT=20, pB=8;
+  const vH=40, vGap=8;
+  const cH=H-pT-pB-vH-vGap;
+
+  // 5% padding on price range for breathing room
+  const prices=D.flatMap(d=>[d.h,d.l]);
+  const rawMin=Math.min(...prices), rawMax=Math.max(...prices), rawRng=rawMax-rawMin||1;
+  const minP=rawMin-rawRng*0.04, maxP=rawMax+rawRng*0.04, rng=maxP-minP;
+  const sp=(W-pL-pR)/n;
+  const cW=Math.max(2, Math.min(14, sp*0.75));
+  const py=p=>pT+cH-((p-minP)/rng)*cH;
+  const px=i=>pL+i*sp+sp/2;
+
+  // ── Background ──
+  ctx.fillStyle='#040d1e'; ctx.fillRect(0,0,W,H);
+
+  // ── Horizontal grid + right-side price labels ──
+  const gridLines=6;
+  for(let i=0;i<=gridLines;i++){
+    const y=pT+(cH/gridLines)*i;
+    const lp=maxP-(rng/gridLines)*i;
+    ctx.strokeStyle=i%2===0?'rgba(59,130,246,.1)':'rgba(59,130,246,.05)';
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
+    // Left labels
+    ctx.fillStyle='#4a6080'; ctx.font='11px IBM Plex Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText('$'+Math.round(lp).toLocaleString(), pL-6, y+4);
+    // Right labels (repeated for easy reading)
+    ctx.textAlign='left';
+    ctx.fillText('$'+Math.round(lp).toLocaleString(), W-pR+6, y+4);
+  }
+
+  // ── Vertical time labels (every ~10 candles) ──
+  const step=Math.max(1,Math.floor(n/8));
+  for(let i=0;i<n;i+=step){
+    const d=D[i], x=px(i);
+    ctx.strokeStyle='rgba(59,130,246,.06)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,pT); ctx.lineTo(x,pT+cH+vH+vGap); ctx.stroke();
+    const dt=new Date(d.t);
+    const label=dt.toLocaleDateString('th-TH',{month:'short',day:'numeric'});
+    ctx.fillStyle='#3a5070'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(label, x, pT+cH+vH+vGap+12);
+  }
+
+  // ── Bollinger Bands ──
+  if(S.overlays.bb){
+    const bb=calcBB(D,20);
+    // Upper/Lower fill
+    ctx.beginPath(); let fs=true;
+    bb.forEach((v,i)=>{ if(v.u==null)return; fs?(ctx.moveTo(px(i),py(v.u)),fs=false):ctx.lineTo(px(i),py(v.u)); });
+    bb.slice().reverse().forEach((v,ri)=>{ const i=bb.length-1-ri; if(v.l==null)return; ctx.lineTo(px(i),py(v.l)); });
+    ctx.closePath(); ctx.fillStyle='rgba(59,130,246,.04)'; ctx.fill();
+    // Upper
+    ctx.strokeStyle='rgba(59,130,246,.45)'; ctx.lineWidth=1; ctx.setLineDash([5,5]);
+    ctx.beginPath(); fs=true;
+    bb.forEach((v,i)=>{ if(v.u==null)return; fs?(ctx.moveTo(px(i),py(v.u)),fs=false):ctx.lineTo(px(i),py(v.u)); });
+    ctx.stroke();
+    // Middle
+    ctx.strokeStyle='rgba(59,130,246,.2)'; ctx.lineWidth=1;
+    ctx.beginPath(); fs=true;
+    bb.forEach((v,i)=>{ if(v.m==null)return; fs?(ctx.moveTo(px(i),py(v.m)),fs=false):ctx.lineTo(px(i),py(v.m)); });
+    ctx.stroke();
+    // Lower
+    ctx.strokeStyle='rgba(59,130,246,.45)';
+    ctx.beginPath(); fs=true;
+    bb.forEach((v,i)=>{ if(v.l==null)return; fs?(ctx.moveTo(px(i),py(v.l)),fs=false):ctx.lineTo(px(i),py(v.l)); });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ── MA50 ──
+  if(S.overlays.ma50){
+    const ma50=sma(D.map(d=>d.c),50);
+    ctx.strokeStyle='#a766ff'; ctx.lineWidth=1.8;
+    ctx.beginPath(); let fs=true;
+    ma50.forEach((v,i)=>{ if(v==null)return; fs?(ctx.moveTo(px(i),py(v)),fs=false):ctx.lineTo(px(i),py(v)); });
+    ctx.stroke();
+    if(ma50[n-1]){
+      el('ci-ma50').textContent='$'+Math.round(ma50[n-1]).toLocaleString();
+      // Right-side label
+      ctx.fillStyle='rgba(167,102,255,.15)'; ctx.fillRect(W-pR+1,py(ma50[n-1])-9,pR-1,16);
+      ctx.fillStyle='#a766ff'; ctx.font='bold 9px IBM Plex Mono,monospace'; ctx.textAlign='left';
+      ctx.fillText('MA50',W-pR+4,py(ma50[n-1])+4);
+    }
+  }
+
+  // ── MA20 ──
+  if(S.overlays.ma20){
+    const ma20=sma(D.map(d=>d.c),20);
+    ctx.strokeStyle='#ff9933'; ctx.lineWidth=1.8;
+    ctx.beginPath(); let fs=true;
+    ma20.forEach((v,i)=>{ if(v==null)return; fs?(ctx.moveTo(px(i),py(v)),fs=false):ctx.lineTo(px(i),py(v)); });
+    ctx.stroke();
+    if(ma20[n-1]){
+      el('ci-ma20').textContent='$'+Math.round(ma20[n-1]).toLocaleString();
+      ctx.fillStyle='rgba(255,153,51,.15)'; ctx.fillRect(W-pR+1,py(ma20[n-1])-9,pR-1,16);
+      ctx.fillStyle='#ff9933'; ctx.font='bold 9px IBM Plex Mono,monospace'; ctx.textAlign='left';
+      ctx.fillText('MA20',W-pR+4,py(ma20[n-1])+4);
+    }
+  }
+
+  // ── Current price line ──
+  const lastClose=D[n-1].c;
+  const cpY=py(lastClose);
+  const isUp=D[n-1].c>=D[n-1].o;
+  ctx.strokeStyle=isUp?'rgba(34,197,94,.6)':'rgba(239,68,68,.6)';
+  ctx.lineWidth=1; ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.moveTo(pL,cpY); ctx.lineTo(W-pR,cpY); ctx.stroke();
+  ctx.setLineDash([]);
+  // Current price box on right
+  ctx.fillStyle=isUp?'rgba(34,197,94,.9)':'rgba(239,68,68,.9)';
+  ctx.fillRect(W-pR+1,cpY-10,pR-1,20);
+  ctx.fillStyle='#fff'; ctx.font='bold 10px IBM Plex Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('$'+Math.round(lastClose).toLocaleString(),W-pR+4,cpY+4);
+
+  // ── Candles ──
+  D.forEach((d,i)=>{
+    const x=px(i), isBull=d.c>=d.o;
+    const col=isBull?'#22c55e':'#ef4444';
+    const bTop=py(Math.max(d.o,d.c));
+    const bBot=py(Math.min(d.o,d.c));
+    const bH=Math.max(1.5,bBot-bTop);
+    // Wick
+    ctx.strokeStyle=isBull?'rgba(34,197,94,.8)':'rgba(239,68,68,.8)';
+    ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x,py(d.h)); ctx.lineTo(x,py(d.l)); ctx.stroke();
+    // Body — solid fill for both bull & bear
+    if(isBull){
+      ctx.fillStyle='#22c55e';
+      ctx.fillRect(x-cW/2,bTop,cW,bH);
+    } else {
+      ctx.fillStyle='#ef4444';
+      ctx.fillRect(x-cW/2,bTop,cW,bH);
+    }
+  });
+
+  // ── AI Signal arrow on latest candle ──
+  if(S.signal && (S.signal.isBuy||S.signal.isSell)){
+    const sig=S.signal, d=D[n-1], x=px(n-1);
+    const isBuy=sig.isBuy;
+    const arrowCol=isBuy?'#22c55e':'#ef4444';
+    ctx.fillStyle=arrowCol;
+    ctx.shadowColor=arrowCol; ctx.shadowBlur=8;
+    ctx.beginPath();
+    if(isBuy){
+      const ay=py(d.l)+18;
+      ctx.moveTo(x,py(d.l)+4); ctx.lineTo(x-7,ay); ctx.lineTo(x+7,ay);
+    } else {
+      const ay=py(d.h)-18;
+      ctx.moveTo(x,py(d.h)-4); ctx.lineTo(x-7,ay); ctx.lineTo(x+7,ay);
+    }
+    ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle=arrowCol; ctx.font='bold 10px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(isBuy?'BUY':'SELL', x, isBuy?py(d.l)+32:py(d.h)-22);
+  }
+
+  // ── Volume bars ──
+  const vTop=pT+cH+vGap;
+  const closes=D.map(d=>d.c);
+  const priceChanges=D.map((d,i)=>i===0?0:Math.abs(d.c-D[i-1].c));
+  const maxChg=Math.max(...priceChanges)||1;
+  D.forEach((d,i)=>{
+    const x=px(i);
+    const h=Math.max(2,vH*(priceChanges[i]/maxChg));
+    ctx.fillStyle=d.c>=d.o?'rgba(34,197,94,.35)':'rgba(239,68,68,.35)';
+    ctx.fillRect(x-cW/2, vTop+vH-h, cW, h);
+  });
+  // Volume label
+  ctx.fillStyle='#3a5070'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('VOL', pL-68, vTop+vH/2+4);
+
+  // ── OHLC display ──
+  el('ci-o').textContent='$'+Math.round(D[n-1].o).toLocaleString();
+  el('ci-h').textContent='$'+Math.round(D[n-1].h).toLocaleString();
+  el('ci-l').textContent='$'+Math.round(D[n-1].l).toLocaleString();
+  el('ci-c').textContent='$'+Math.round(D[n-1].c).toLocaleString();
+}
+
+/* ════════════════════════════════════════
+   PAPER TRADING
+════════════════════════════════════════ */
+function loadPaper() {
+  try { S.paperTrades=JSON.parse(localStorage.getItem('investai_trades')||'[]'); } catch(e){ S.paperTrades=[]; }
+  try { S.perfHistory=JSON.parse(localStorage.getItem('investai_perf')||'[]'); } catch(e){ S.perfHistory=[]; }
+}
+function savePaper() {
+  localStorage.setItem('investai_trades',JSON.stringify(S.paperTrades));
+  localStorage.setItem('investai_perf',JSON.stringify(S.perfHistory));
+}
+
+function manualTrade(side) {
+  if(!S.currentPrice) { showToast('รอราคาโหลดก่อน'); return; }
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+  if(openTrade) { showToast('⚠️ มี position เปิดอยู่แล้ว — กด "ปิด Position" ก่อน'); return; }
+  S.paperTrades.push({
+    id: Date.now(), side,
+    entryPrice: S.currentPrice, entryTime: Date.now(),
+    signal: 'MANUAL', status: 'open',
+    exitPrice: null, exitTime: null, pnlPct: null,
+  });
+  savePaper(); renderPaper();
+  showToast(`✅ เปิด ${side.toUpperCase()} @ $${Math.round(S.currentPrice).toLocaleString()}`);
+}
+
+function closeOpenTrade() {
+  if(!S.currentPrice) return;
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+  if(!openTrade) { showToast('ไม่มี position เปิดอยู่'); return; }
+  openTrade.status = 'closed';
+  openTrade.exitPrice = S.currentPrice;
+  openTrade.exitTime = Date.now();
+  const pnlPct = openTrade.side==='buy'
+    ? (S.currentPrice - openTrade.entryPrice) / openTrade.entryPrice * 100
+    : (openTrade.entryPrice - S.currentPrice) / openTrade.entryPrice * 100;
+  openTrade.pnlPct = pnlPct;
+  const startVal = S.perfHistory.length ? S.perfHistory[S.perfHistory.length-1].val : 10000;
+  S.perfHistory.push({t: Date.now(), val: startVal*(1+pnlPct/100), pnl: pnlPct});
+  savePaper(); renderPaper();
+  showToast(`${pnlPct>=0?'✅ กำไร':'❌ ขาดทุน'} ${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}% — position ปิดแล้ว`);
+}
+
+function processPaperTrade(sig) {
+  if(!sig||!S.currentPrice) return;
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+  const mode = document.getElementById('paperMode')?.value||'auto';
+  if(mode!=='auto') return;
+
+  // Close existing trade if signal changed
+  if(openTrade) {
+    const shouldClose = (openTrade.side==='buy'&&(sig.sigName.includes('SELL')||sig.sigName==='HOLD'))
+      ||(openTrade.side==='sell'&&(sig.sigName.includes('BUY')||sig.sigName==='HOLD'));
+    if(shouldClose) {
+      openTrade.status='closed';
+      openTrade.exitPrice=S.currentPrice;
+      openTrade.exitTime=Date.now();
+      const pnlPct = openTrade.side==='buy'
+        ? (S.currentPrice-openTrade.entryPrice)/openTrade.entryPrice*100
+        : (openTrade.entryPrice-S.currentPrice)/openTrade.entryPrice*100;
+      openTrade.pnlPct=pnlPct;
+      const startVal = S.perfHistory.length?S.perfHistory[S.perfHistory.length-1].val:10000;
+      const newVal = startVal*(1+pnlPct/100);
+      S.perfHistory.push({t:Date.now(),val:newVal,pnl:pnlPct});
+      savePaper(); renderPaper(); return;
+    }
+  }
+
+  // Open new trade on BUY/SELL signal (not HOLD, not if already open)
+  if(!openTrade && (sig.isBuy||sig.isSell) && !sig.sigName.includes('WEAK')) {
+    S.paperTrades.push({
+      id:Date.now(), side:sig.isBuy?'buy':'sell',
+      entryPrice:S.currentPrice, entryTime:Date.now(),
+      signal:sig.sigName, status:'open',
+      exitPrice:null, exitTime:null, pnlPct:null,
+    });
+    savePaper();
+  }
+  renderPaper();
+}
+
+function renderPaper() {
+  loadPaper();
+  const trades=S.paperTrades;
+  const closed=trades.filter(t=>t.status==='closed');
+  const open=trades.filter(t=>t.status==='open');
+  const wins=closed.filter(t=>t.pnlPct>0).length;
+  const wr=closed.length?((wins/closed.length)*100).toFixed(1):0;
+  const totalPnl=closed.reduce((s,t)=>s+(t.pnlPct||0),0);
+  const portVal=10000*(1+totalPnl/100/Math.max(closed.length,1)*closed.length);
+  const unrealizedPnl=open.length&&S.currentPrice?
+    open.map(t=>t.side==='buy'?(S.currentPrice-t.entryPrice)/t.entryPrice*100:(t.entryPrice-S.currentPrice)/t.entryPrice*100)[0]:null;
+
+  el('ps-wr').textContent=wr+'%';
+  el('ps-wr').className='ps-val '+(parseFloat(wr)>=50?'g':'r');
+  el('ps-wrsub').textContent=closed.length+' closed trades';
+  el('ps-ret').textContent=(totalPnl>=0?'+':'')+totalPnl.toFixed(1)+'%';
+  el('ps-ret').className='ps-val '+(totalPnl>=0?'g':'r');
+  el('ps-val').textContent='$'+portVal.toFixed(0);
+  el('paperOpenCount').textContent=open.length+' Open';
+
+  // Update manual trade panel
+  const hasOpen = open.length > 0;
+  const btnBuy = document.getElementById('btn-manual-buy');
+  const btnSell = document.getElementById('btn-manual-sell');
+  const btnClose = document.getElementById('btn-manual-close');
+  const mtPrice = document.getElementById('mt-price');
+  if(btnBuy) btnBuy.disabled = hasOpen;
+  if(btnSell) btnSell.disabled = hasOpen;
+  if(btnClose) btnClose.disabled = !hasOpen;
+  if(mtPrice && S.currentPrice) mtPrice.textContent = '$'+Math.round(S.currentPrice).toLocaleString();
+  if(hasOpen && btnClose) {
+    const ot = open[0];
+    const liveP = S.currentPrice ? (ot.side==='buy'?(S.currentPrice-ot.entryPrice)/ot.entryPrice*100:(ot.entryPrice-S.currentPrice)/ot.entryPrice*100) : null;
+    if(liveP!=null) btnClose.textContent = `❌ ปิด Position (${liveP>=0?'+':''}${liveP.toFixed(2)}%)`;
+  } else if(btnClose) { btnClose.textContent = '❌ ปิด Position'; }
+
+  if(unrealizedPnl!=null){
+    el('ps-unrealized').textContent=(unrealizedPnl>=0?'+':'')+unrealizedPnl.toFixed(2)+'%';
+    el('ps-unrealized').className='ps-val '+(unrealizedPnl>=0?'g':'r');
+    el('ps-usub').textContent='BTC open position';
+  } else {
+    el('ps-unrealized').textContent='--';
+    el('ps-unrealized').className='ps-val';
+    el('ps-usub').textContent='ไม่มี open position';
+  }
+
+  // Render trade list
+  const list=document.getElementById('tradeList');
+  if(!trades.length){ list.innerHTML='<div class="empty-trades">ยังไม่มีรายการ รอสัญญาณ AI...</div>'; return; }
+  const sorted=[...trades].reverse();
+  list.innerHTML=sorted.slice(0,20).map(t=>{
+    const pnl=t.status==='open'&&S.currentPrice?(t.side==='buy'?(S.currentPrice-t.entryPrice)/t.entryPrice*100:(t.entryPrice-S.currentPrice)/t.entryPrice*100):t.pnlPct;
+    const pnlStr=pnl!=null?(pnl>=0?'+':'')+pnl.toFixed(2)+'%':'--';
+    const pnlCol=pnl>0?'up':pnl<0?'down':'';
+    const d=new Date(t.entryTime);
+    const dateStr=d.toLocaleDateString('th-TH',{month:'short',day:'numeric'});
+    return `<div class="trade-item">
+      <div class="trade-side ${t.side}">${t.side.toUpperCase()}</div>
+      <div style="flex:1"><div class="trade-asset">BTC/USD</div><div class="trade-price">Entry: $${Math.round(t.entryPrice).toLocaleString()}</div></div>
+      <div class="trade-pnl ${pnlCol}">${pnlStr}</div>
+      <div class="trade-status ${t.status}">${t.status==='open'?'Open':'Closed'}</div>
+      <div class="trade-date">${dateStr}</div>
+    </div>`;
+  }).join('');
+
+  renderPerfChart();
+}
+
+function renderPerfChart() {
+  const ctx=document.getElementById('perfChart'); if(!ctx) return;
+  if(CI.perf) CI.perf.destroy();
+  const ph=S.perfHistory.length?S.perfHistory:[{val:10000,t:Date.now()}];
+  const labels=ph.map(p=>new Date(p.t).toLocaleDateString('th-TH',{month:'short',day:'numeric'}));
+  const vals=ph.map(p=>p.val);
+  const refLine=new Array(vals.length).fill(10000);
+  CI.perf=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'AI Portfolio',data:vals,borderColor:'#3b82f6',backgroundColor:'rgba(37,99,235,.06)',borderWidth:2,fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#3b82f6'},
+    {label:'Baseline $10k',data:refLine,borderColor:'rgba(234,179,8,.4)',borderWidth:1,fill:false,tension:0,pointRadius:0,borderDash:[4,4]},
+  ]},options:{
+    responsive:true,
+    plugins:{legend:{labels:{color:'#5b7299',font:{family:'IBM Plex Sans Thai',size:10},boxWidth:14,boxHeight:2}},
+      tooltip:{backgroundColor:'#091828',titleColor:'#cdd9f0',bodyColor:'#5b7299',borderColor:'rgba(37,99,235,.3)',borderWidth:1,callbacks:{label:c=>` $${Math.round(c.raw).toLocaleString()}`}}
+    },
+    scales:{
+      x:{ticks:{color:'#3a5070',font:{size:9},maxTicksLimit:6},grid:{color:'rgba(37,99,235,.08)'}},
+      y:{ticks:{color:'#3a5070',font:{size:9},callback:v=>'$'+(v/1000).toFixed(1)+'k'},grid:{color:'rgba(37,99,235,.08)'}},
+    }
+  }});
+}
+
+function resetPaper() {
+  if(!confirm('รีเซ็ต Paper Trade ทั้งหมด?')) return;
+  S.paperTrades=[]; S.perfHistory=[];
+  localStorage.removeItem('investai_trades'); localStorage.removeItem('investai_perf');
+  renderPaper(); showToast('รีเซ็ต Paper Trade แล้ว');
+}
+
+/* ════════════════════════════════════════
+   ALERTS
+════════════════════════════════════════ */
+function loadAlerts() {
+  try { S.alerts=JSON.parse(localStorage.getItem('investai_alerts')||'[]'); } catch(e){ S.alerts=[]; }
+  renderAlerts();
+}
+function saveAlerts() { localStorage.setItem('investai_alerts',JSON.stringify(S.alerts)); }
+
+function addAlert() {
+  const price=parseFloat(document.getElementById('alPrice').value);
+  const cond=document.getElementById('alCond').value;
+  if(!price||isNaN(price)) { showToast('กรุณาใส่ราคา'); return; }
+  S.alerts.push({id:Date.now(),price,cond,active:true,created:Date.now()});
+  saveAlerts(); renderAlerts();
+  document.getElementById('alPrice').value='';
+  showToast('เพิ่ม Alert '+cond+' $'+price.toLocaleString());
+}
+
+function renderAlerts() {
+  const list=document.getElementById('alertList');
+  if(!S.alerts.length){list.innerHTML='<div style="color:var(--text3);font-size:.78rem;padding:8px 0">ยังไม่มี alert</div>';return;}
+  list.innerHTML=S.alerts.map(a=>`
+    <div class="alert-item">
+      <div class="alert-left">
+        <div class="alert-dot ${a.active?'':'p'}"></div>
+        <div><div class="alert-txt">BTC ${a.cond==='above'?'≥':'≤'} $${a.price.toLocaleString()}</div><div class="alert-sub">${new Date(a.created).toLocaleDateString('th-TH')}</div></div>
+      </div>
+      <button class="alert-del" onclick="removeAlert(${a.id})">×</button>
+    </div>`).join('');
+}
+
+function removeAlert(id) {
+  S.alerts=S.alerts.filter(a=>a.id!==id);
+  saveAlerts(); renderAlerts();
+}
+
+function updatePriceSuggest() {
+  const p = S.currentPrice;
+  if(!p) return;
+  const fmt = v => '$' + Math.round(v).toLocaleString();
+  const mkBtn = (val, dir) => `<span class="psv ${dir}" onclick="document.getElementById('alPrice').value='${Math.round(val)}';document.getElementById('alCond').value='${dir==='up'?'above':'below'}'">${fmt(val)}</span>`;
+  // Short: ±2.5% and ±5%
+  const ss = document.getElementById('ps-short');
+  if(ss) ss.innerHTML = mkBtn(p*1.05,'up')+mkBtn(p*1.025,'up')+mkBtn(p*0.975,'dn')+mkBtn(p*0.95,'dn');
+  // Medium: ±8% and ±15%
+  const sm = document.getElementById('ps-medium');
+  if(sm) sm.innerHTML = mkBtn(p*1.15,'up')+mkBtn(p*1.08,'up')+mkBtn(p*0.92,'dn')+mkBtn(p*0.85,'dn');
+  // Long: ±20% and ±35%
+  const sl = document.getElementById('ps-long');
+  if(sl) sl.innerHTML = mkBtn(p*1.35,'up')+mkBtn(p*1.20,'up')+mkBtn(p*0.80,'dn')+mkBtn(p*0.65,'dn');
+}
+
+function checkAlerts() {
+  if(!S.currentPrice) return;
+  S.alerts.forEach(a=>{
+    if(!a.active) return;
+    const hit=(a.cond==='above'&&S.currentPrice>=a.price)||(a.cond==='below'&&S.currentPrice<=a.price);
+    if(hit) {
+      a.active=false; saveAlerts(); renderAlerts();
+      const msg=`🚨 BTC ${a.cond==='above'?'ขึ้นถึง':'ลงถึง'} $${a.price.toLocaleString()} (ราคาปัจจุบัน: $${Math.round(S.currentPrice).toLocaleString()})`;
+      showToast(msg);
+      sendBrowserNotif('Invest AI — Price Alert', msg);
+      if(document.getElementById('tog-price')?.checked) sendLineMsg(msg);
+    }
+  });
+}
+
+/* ════════════════════════════════════════
+   NOTIFICATIONS
+════════════════════════════════════════ */
+async function toggleBrowserNotif(el2) {
+  if(el2.checked){
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ el2.checked=false; showToast('ไม่ได้รับอนุญาต Notification'); }
+    else { showToast('เปิด Browser Notification แล้ว'); sendBrowserNotif('Invest AI','เปิด Notification สำเร็จ ✓'); }
+  }
+}
+
+function sendBrowserNotif(title,body) {
+  if(Notification.permission==='granted') new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>₿</text></svg>'});
+}
+
+async function testLine() {
+  const token=document.getElementById('lineToken').value.trim();
+  if(!token){showToast('กรุณาใส่ Line Token');return;}
+  localStorage.setItem('investai_line_token',token);
+  const price=S.currentPrice?'$'+Math.round(S.currentPrice).toLocaleString():'--';
+  const ok=await sendLineMsg(`🤖 Invest AI Test\nBTC: ${price}\nการแจ้งเตือนพร้อมใช้งาน ✓`);
+  showToast(ok?'ส่ง Line Notify สำเร็จ ✓':'ลองส่งแล้ว (ตรวจสอบ Line ของคุณ)');
+}
+
+async function sendLineMsg(msg) {
+  const token=localStorage.getItem('investai_line_token');
+  if(!token) return false;
+  try {
+    await fetch('https://notify-api.line.me/api/notify',{
+      method:'POST', mode:'no-cors',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/x-www-form-urlencoded'},
+      body:'message='+encodeURIComponent(msg)
+    });
+    return true;
+  } catch(e){ return false; }
+}
+
+function checkSignalChange(newSig) {
+  if(!newSig) return;
+  const prev=S.lastSignal;
+  if(prev && prev.sigName!==newSig.sigName) {
+    const isBuy=newSig.isBuy, isSell=newSig.isSell;
+    const notify=(isBuy&&document.getElementById('tog-buy')?.checked)||(isSell&&document.getElementById('tog-sell')?.checked);
+    if(notify) {
+      const msg=`🤖 Invest AI Signal\n${newSig.sigName} — BTC/USD\nราคา: $${Math.round(newSig.lastClose).toLocaleString()}\nConfidence: ${newSig.confidence}%`;
+      sendBrowserNotif('Invest AI Signal Changed',`${prev.sigName} → ${newSig.sigName}`);
+      sendLineMsg(msg);
+      showToast(`Signal: ${prev.sigName} → ${newSig.sigName}`);
+    }
+  }
+  S.lastSignal=newSig;
+}
+
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
+function showToast(msg) {
+  const ex=document.querySelector('.toast');
+  if(ex) ex.remove();
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+/* ════════════════════════════════════════
+   MAIN DATA FLOW
+════════════════════════════════════════ */
+async function loadData() {
+  el('refreshBtn').classList.add('spinning');
+  try {
+    const [ohlc, priceData] = await Promise.all([fetchOHLC(S.tfDays), fetchPrice()]);
+    S.candles = ohlc;
+    S.currentPrice = priceData.usd;
+    S.marketData = priceData;
+    S.isLive = true;
+    el('apiBadge').textContent='LIVE DATA'; el('apiBadge').className='api-badge api-live';
+    processAll(priceData);
+  } catch(e) {
+    console.warn('API error, using mock data:', e.message);
+    S.candles = genMockCandles(120);
+    S.currentPrice = S.candles[S.candles.length-1].c;
+    S.isLive = false;
+    el('apiBadge').textContent='DEMO DATA'; el('apiBadge').className='api-badge api-demo';
+    const mockPriceData = {usd:S.currentPrice, usd_24h_change:(Math.random()-0.45)*4, usd_24h_vol:3.2e9, usd_market_cap:1.6e12};
+    processAll(mockPriceData);
+  }
+  el('refreshBtn').classList.remove('spinning');
+  el('loading').style.opacity='0';
+  setTimeout(()=>el('loading').style.display='none',500);
+}
+
+function processAll(priceData) {
+  renderStats(priceData);
+  const sig = generateSignal(S.candles);
+  S.signal = sig;
+  if(sig) {
+    renderIndicatorCards(sig);
+    renderSignalSection(sig);
+    renderRSI(sig);
+    renderMACD(sig);
+    checkSignalChange(sig);
+    processPaperTrade(sig);
+    checkAlerts();
+  }
+  drawCandles();
+  renderPaper();
+  updatePriceSuggest();
+  startCountdown();
+}
+
+async function refreshData() {
+  stopCountdown();
+  await loadData();
+}
+
+/* ════════════════════════════════════════
+   COUNTDOWN TIMER
+════════════════════════════════════════ */
+function startCountdown() {
+  stopCountdown();
+  S.countdown = S.refreshSec;
+  S.countdownTimer = setInterval(()=>{
+    S.countdown--;
+    el('nextUpd').textContent=`next: ${S.countdown}s`;
+    if(S.countdown<=0) { stopCountdown(); refreshData(); }
+  },1000);
+}
+function stopCountdown() {
+  if(S.countdownTimer) clearInterval(S.countdownTimer);
+}
+
+function setRefreshInterval(sec) {
+  S.refreshSec=parseInt(sec);
+  stopCountdown(); startCountdown();
+  showToast('Refresh ทุก '+sec+' วินาที');
+}
+
+/* ════════════════════════════════════════
+   UI CONTROLS
+════════════════════════════════════════ */
+function goTo(id, btn) {
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nm').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='s-chart') setTimeout(()=>{ drawCandles(); },50);
+  if(id==='s-paper') { renderPaper(); updatePriceSuggest(); }
+}
+
+function toggleOverlay(key, btn) {
+  S.overlays[key]=!S.overlays[key];
+  btn.classList.toggle('active',S.overlays[key]);
+  drawCandles();
+}
+
+async function setTf(days, btn) {
+  S.tfDays=days;
+  document.querySelectorAll('.tf-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  el('refreshBtn').classList.add('spinning');
+  try {
+    S.candles=await fetchOHLC(days);
+  } catch(e){ S.candles=genMockCandles(days*4); }
+  el('refreshBtn').classList.remove('spinning');
+  const sig=generateSignal(S.candles);
+  S.signal=sig;
+  if(sig){ renderIndicatorCards(sig); renderSignalSection(sig); renderRSI(sig); renderMACD(sig); }
+  drawCandles();
+}
+
+function saveSettings() {
+  const token=document.getElementById('lineToken').value.trim();
+  if(token) localStorage.setItem('investai_line_token',token);
+  showToast('บันทึกการตั้งค่าแล้ว ✓');
+}
+
+/* ════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════ */
+function el(id){ return document.getElementById(id); }
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+window.addEventListener('load', async ()=>{
+  loadAlerts();
+  loadPaper();
+  const savedToken=localStorage.getItem('investai_line_token');
+  if(savedToken) document.getElementById('lineToken').value=savedToken;
+  const savedInterval=localStorage.getItem('investai_refresh');
+  if(savedInterval) { S.refreshSec=parseInt(savedInterval); document.getElementById('refreshInterval').value=savedInterval; }
+  renderPaper();
+  await loadData();
+
+  // Redraw chart on window resize
+  window.addEventListener('resize', ()=>{
+    clearTimeout(window._resizeTimer);
+    window._resizeTimer=setTimeout(drawCandles,200);
+  });
+});
+</script>
+</body>
+</html>
