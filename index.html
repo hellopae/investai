@@ -165,6 +165,17 @@ section.active { display:block; }
 .ov-btn.ma50 { border-color:rgba(167,102,255,.3); color:rgba(167,102,255,.6); }
 .ov-btn.active.bb { background:rgba(59,130,246,.15); border-color:rgba(59,130,246,.5); color:var(--blueb); }
 .ov-btn.bb { border-color:rgba(59,130,246,.3); color:rgba(59,130,246,.6); }
+.ov-btn.active.fib { background:rgba(252,211,77,.15); border-color:rgba(252,211,77,.5); color:#fcd34d; }
+.ov-btn.fib { border-color:rgba(252,211,77,.3); color:rgba(252,211,77,.55); }
+.ov-btn.active.wave { background:rgba(20,241,149,.15); border-color:rgba(20,241,149,.5); color:#14f195; }
+.ov-btn.wave { border-color:rgba(20,241,149,.3); color:rgba(20,241,149,.55); }
+/* ════════════════════════════════════════
+   COIN SELECTOR TABS
+════════════════════════════════════════ */
+.coin-tabs { display:flex; gap:3px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:3px; flex-wrap:wrap; }
+.coin-tab { padding:4px 10px; border-radius:6px; font-size:.72rem; font-weight:800; cursor:pointer; border:1px solid transparent; background:transparent; font-family:var(--mono); transition:all .15s; color:var(--text2); }
+.coin-tab:hover { color:var(--text); }
+.coin-tab.active { background:var(--bludim); border-color:rgba(59,130,246,.28); color:var(--blueb); }
 .chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:14px; }
 canvas#mainChart { display:block; width:100%; }
 .chart-ohlc { display:flex; gap:16px; padding:8px 0 10px; border-bottom:1px solid var(--border); margin-bottom:10px; flex-wrap:wrap; }
@@ -437,6 +448,8 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   .tf-guide { grid-template-columns:1fr; }
   .chat-msgs { height:240px; }
   .signal-hero { padding:16px; }
+  .coin-tabs { gap:2px; }
+  .coin-tab { padding:3px 7px; font-size:.65rem; }
   .signal-name { font-size:2rem; }
   .chart-header { flex-direction:column; align-items:flex-start; }
   .mt-btns { flex-wrap:wrap; }
@@ -460,7 +473,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
     <div class="logo-txt">Invest <span>AI</span></div>
   </div>
   <div class="nav-price-wrap">
-    <span class="btc-label">BTC</span>
+    <span class="btc-label" id="navCoinLabel">BTC</span>
     <span class="btc-price" id="navPrice">$--,---</span>
     <span class="btc-chg" id="navChg">--</span>
   </div>
@@ -488,7 +501,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   <!-- Stats Bar -->
   <div class="stats-bar">
     <div class="stat-item">
-      <div class="stat-label">BTC Price</div>
+      <div class="stat-label" id="statCoinLabel">BTC Price</div>
       <div class="stat-val btc" id="priceUSD">$82,450</div>
       <div class="stat-sub" id="price24h">--</div>
     </div>
@@ -523,12 +536,23 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   <!-- Chart Card -->
   <div class="chart-card">
     <div class="chart-header">
-      <div class="st"><span class="ic">◉</span> BTC/USD Candlestick</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="st"><span class="ic">◉</span> <span id="chartTitle">BTC/USD</span> Candlestick</div>
+        <div class="coin-tabs">
+          <button class="coin-tab active" id="ctab-BTC" onclick="switchCoin('BTC',this)">BTC</button>
+          <button class="coin-tab" id="ctab-ETH" onclick="switchCoin('ETH',this)">ETH</button>
+          <button class="coin-tab" id="ctab-SOL" onclick="switchCoin('SOL',this)">SOL</button>
+          <button class="coin-tab" id="ctab-BNB" onclick="switchCoin('BNB',this)">BNB</button>
+          <button class="coin-tab" id="ctab-XRP" onclick="switchCoin('XRP',this)">XRP</button>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div class="overlay-btns">
           <button class="ov-btn ma20 active" id="btn-ma20" onclick="toggleOverlay('ma20',this)">MA20</button>
           <button class="ov-btn ma50 active" id="btn-ma50" onclick="toggleOverlay('ma50',this)">MA50</button>
           <button class="ov-btn bb active" id="btn-bb" onclick="toggleOverlay('bb',this)">BB</button>
+          <button class="ov-btn fib" id="btn-fib" onclick="toggleOverlay('fib',this)">FIB</button>
+          <button class="ov-btn wave" id="btn-wave" onclick="toggleOverlay('wave',this)">WAVE</button>
         </div>
         <div class="tf-tabs">
           <button class="tf-tab" onclick="setTf(7,this)">7D</button>
@@ -555,6 +579,8 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
       <div class="legend-item"><div class="legend-line" style="background:rgba(59,130,246,.6);border-top:1px dashed rgba(59,130,246,.6)"></div><span>เส้นน้ำเงินประ = Bollinger Bands</span></div>
       <div class="legend-item"><div style="font-size:.9rem">▲</div><span style="color:var(--green)">สัญญาณ BUY ของ AI</span></div>
       <div class="legend-item"><div style="font-size:.9rem">▼</div><span style="color:var(--red)">สัญญาณ SELL ของ AI</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#fcd34d;border-top:1px dashed #fcd34d"></div><span style="color:#fcd34d">FIB — Fibonacci Retracement (0%/23.6%/38.2%/50%/61.8%)</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#14f195;border-top:1px dashed #14f195"></div><span style="color:#14f195">WAVE — Elliott Wave ZigZag (①②③④⑤ A B C)</span></div>
     </div>
   </div>
 
@@ -634,7 +660,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   <!-- Signal Hero -->
   <div class="signal-hero" id="signalHero">
     <div class="signal-main">
-      <div class="signal-tag">Bitcoin / USD · AI Signal</div>
+      <div class="signal-tag" id="sigCoinTag">Bitcoin / USD · AI Signal</div>
       <div class="signal-name" id="sigName" style="color:var(--yellow)">HOLD</div>
       <div class="signal-conf">ความมั่นใจ: <span id="sigConf">--</span>% · Score: <span id="sigScore">--</span></div>
       <div class="signal-reasons" id="sigReasons">
@@ -1051,7 +1077,8 @@ const S = {
   marketData: null,
   signal: null,
   tfDays: 30,
-  overlays: { ma20:true, ma50:true, bb:true },
+  coin: 'BTC',
+  overlays: { ma20:true, ma50:true, bb:true, fib:false, wave:false },
   refreshTimer: null,
   refreshSec: 60,
   countdown: 60,
@@ -1073,34 +1100,58 @@ const S = {
 const CI = { rsi:null, macd:null, perf:null };
 
 /* ════════════════════════════════════════
+   COINS REGISTRY
+════════════════════════════════════════ */
+const COINS = {
+  BTC: { id:'bitcoin',     sym:'BTC', name:'Bitcoin',  color:'#f59e0b', mockPrice:82000 },
+  ETH: { id:'ethereum',    sym:'ETH', name:'Ethereum', color:'#8b5cf6', mockPrice:3200  },
+  SOL: { id:'solana',      sym:'SOL', name:'Solana',   color:'#14f195', mockPrice:145   },
+  BNB: { id:'binancecoin', sym:'BNB', name:'BNB',      color:'#f0b90b', mockPrice:580   },
+  XRP: { id:'ripple',      sym:'XRP', name:'XRP',      color:'#0ecdd8', mockPrice:0.55  },
+};
+
+/* ════════════════════════════════════════
    API — CoinGecko
 ════════════════════════════════════════ */
 const BASE = 'https://api.coingecko.com/api/v3';
 
 async function fetchOHLC(days) {
-  const r = await fetch(`${BASE}/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`);
+  const coinId = COINS[S.coin].id;
+  const r = await fetch(`${BASE}/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`);
   if(!r.ok) throw new Error('OHLC fetch failed');
   const data = await r.json();
   return data.map(([t,o,h,l,c]) => ({t,o,h,l,c}));
 }
 
 async function fetchPrice() {
-  const r = await fetch(`${BASE}/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
+  const coinId = COINS[S.coin].id;
+  const r = await fetch(`${BASE}/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
   if(!r.ok) throw new Error('Price fetch failed');
-  return (await r.json()).bitcoin;
+  return (await r.json())[coinId];
+}
+
+// Format price based on coin magnitude
+function fmtPrice(n) {
+  if(n === null || n === undefined || isNaN(n)) return '$--';
+  if(n < 0.01) return '$'+n.toFixed(6);
+  if(n < 1)    return '$'+n.toFixed(4);
+  if(n < 100)  return '$'+n.toFixed(2);
+  return '$'+Math.round(n).toLocaleString();
 }
 
 /* ════════════════════════════════════════
    MOCK DATA (fallback)
 ════════════════════════════════════════ */
 function genMockCandles(n=120) {
-  let p = 82000, arr = [];
+  const base = COINS[S.coin]?.mockPrice || 82000;
+  let p = base, arr = [];
   const now = Date.now();
   for(let i=n; i>=0; i--) {
     const o = p;
-    const c = o + (Math.random()-.47)*1800;
-    const h = Math.max(o,c)+Math.random()*600;
-    const l = Math.min(o,c)-Math.random()*600;
+    const vol = p * 0.022; // 2.2% volatility per candle
+    const c = Math.max(o + (Math.random()-.47)*vol, base*0.1);
+    const h = Math.max(o,c) + Math.random()*vol*0.35;
+    const l = Math.min(o,c) - Math.random()*vol*0.35;
     arr.push({t: now - i*4*3600*1000, o, h, l, c});
     p = c;
   }
@@ -1157,6 +1208,67 @@ function calcBB(candles, p=20, std=2) {
     const sd=Math.sqrt(sl.reduce((s,v)=>s+Math.pow(v-avg,2),0)/p);
     return {u:avg+std*sd, m:avg, l:avg-std*sd};
   });
+}
+
+/* ════════════════════════════════════════
+   FIBONACCI & ZIGZAG
+════════════════════════════════════════ */
+function calcFibLevels(candles) {
+  const swingHigh = Math.max(...candles.map(d=>d.h));
+  const swingLow  = Math.min(...candles.map(d=>d.l));
+  const range = swingHigh - swingLow;
+  const ratios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0];
+  const labels = ['0% (High)','23.6%','38.2%','50%','61.8% ★','78.6%','100% (Low)'];
+  const colors = [
+    'rgba(239,68,68,.65)','rgba(252,211,77,.65)','rgba(34,197,94,.65)',
+    'rgba(59,130,246,.70)','rgba(167,102,255,.70)',
+    'rgba(249,115,22,.65)','rgba(239,68,68,.65)'
+  ];
+  return ratios.map((r,i) => ({
+    price: swingHigh - r * range,
+    ratio: r, label: labels[i], color: colors[i]
+  }));
+}
+
+function calcZigZag(candles, threshold=0.03) {
+  if(candles.length < 3) return [];
+  const pivots = [];
+  let trend = 0; // 0=init, 1=up, -1=down
+  let exIdx = 0, exVal = candles[0].c;
+
+  for(let i=1; i<candles.length; i++) {
+    const hi = candles[i].h, lo = candles[i].l;
+    if(trend <= 0) { // tracking potential bottom or start
+      if(lo < exVal) { exIdx=i; exVal=lo; }
+      if((hi-exVal)/Math.abs(exVal) >= threshold) {
+        pivots.push({idx:exIdx, val:exVal, type:'L'});
+        trend=1; exIdx=i; exVal=hi;
+      }
+    }
+    if(trend >= 0 && trend!==0) { // tracking potential top — only if already up
+      // handled below
+    }
+    if(trend === 1) { // tracking potential top
+      if(hi > exVal) { exIdx=i; exVal=hi; }
+      if((exVal-lo)/exVal >= threshold) {
+        pivots.push({idx:exIdx, val:exVal, type:'H'});
+        trend=-1; exIdx=i; exVal=lo;
+      }
+    } else if(trend === -1) { // tracking potential bottom
+      if(lo < exVal) { exIdx=i; exVal=lo; }
+      if((hi-exVal)/Math.abs(exVal) >= threshold) {
+        pivots.push({idx:exIdx, val:exVal, type:'L'});
+        trend=1; exIdx=i; exVal=hi;
+      }
+    } else { // init — detect first move
+      if(hi - candles[0].h > candles[0].h*threshold) { trend=1; exIdx=i; exVal=hi; }
+      else if(candles[0].l - lo > candles[0].l*threshold) { trend=-1; exIdx=i; exVal=lo; }
+    }
+  }
+  // Push last extreme
+  if(trend===1 && exVal) pivots.push({idx:exIdx, val:exVal, type:'H'});
+  if(trend===-1 && exVal) pivots.push({idx:exIdx, val:exVal, type:'L'});
+  return pivots;
 }
 
 /* ════════════════════════════════════════
@@ -1303,7 +1415,8 @@ function renderStats(priceData) {
   if(!priceData) return;
   const price=priceData.usd||0, chg=priceData.usd_24h_change||0, vol=priceData.usd_24h_vol||0, cap=priceData.usd_market_cap||0;
   const isUp = chg>=0;
-  el('priceUSD').textContent = fmtUSD(price);
+  const coin = COINS[S.coin];
+  el('priceUSD').textContent = fmtPrice(price);
   el('price24h').textContent = (isUp?'▲':'▼') + ' '+Math.abs(chg).toFixed(2)+'%';
   el('price24h').className = 'stat-sub ' + (isUp?'up':'down');
   el('chgVal').textContent = (isUp?'+':'')+chg.toFixed(2)+'%';
@@ -1311,10 +1424,15 @@ function renderStats(priceData) {
   el('chgPct').textContent = isUp?'ขาขึ้น 24h':'ขาลง 24h';
   el('volVal').textContent = '$'+fmtShort(vol);
   el('capVal').textContent = '$'+fmtShort(cap);
-  el('navPrice').textContent = fmtUSD(price);
+  el('navPrice').textContent = fmtPrice(price);
   el('navChg').textContent = (isUp?'+':'')+chg.toFixed(2)+'%';
   el('navChg').className = 'btc-chg ' + (isUp?'up':'down');
   el('lastUpd').textContent = new Date().toLocaleTimeString('th-TH');
+  // Dynamic coin labels
+  const navLbl=el('navCoinLabel'); if(navLbl) navLbl.textContent=coin.sym;
+  const statLbl=el('statCoinLabel'); if(statLbl) statLbl.textContent=coin.sym+' Price';
+  const chartT=el('chartTitle'); if(chartT) chartT.textContent=coin.sym+'/USD';
+  const sigTag=el('sigCoinTag'); if(sigTag) sigTag.textContent=coin.name+' / USD · AI Signal';
 }
 
 function renderIndicatorCards(sig) {
@@ -1356,9 +1474,9 @@ function renderSignalSection(sig) {
 
   // Targets
   if(sig.targets) {
-    el('t-entry').textContent = fmtUSD(sig.targets.entry);
-    el('t-sl').textContent = fmtUSD(sig.targets.sl);
-    el('t-tp').textContent = fmtUSD(sig.targets.tp);
+    el('t-entry').textContent = fmtPrice(sig.targets.entry);
+    el('t-sl').textContent = fmtPrice(sig.targets.sl);
+    el('t-tp').textContent = fmtPrice(sig.targets.tp);
     el('t-rr').textContent = sig.targets.rr;
   } else {
     el('t-entry').textContent = 'รอสัญญาณชัดขึ้น';
@@ -1496,10 +1614,10 @@ function drawCandles() {
     ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
     // Left labels
     ctx.fillStyle='#4a6080'; ctx.font='11px IBM Plex Mono,monospace'; ctx.textAlign='right';
-    ctx.fillText('$'+Math.round(lp).toLocaleString(), pL-6, y+4);
+    ctx.fillText(fmtPrice(lp), pL-6, y+4);
     // Right labels (repeated for easy reading)
     ctx.textAlign='left';
-    ctx.fillText('$'+Math.round(lp).toLocaleString(), W-pR+6, y+4);
+    ctx.fillText(fmtPrice(lp), W-pR+6, y+4);
   }
 
   // ── Vertical time labels (every ~10 candles) ──
@@ -1548,7 +1666,7 @@ function drawCandles() {
     ma50.forEach((v,i)=>{ if(v==null)return; fs?(ctx.moveTo(px(i),py(v)),fs=false):ctx.lineTo(px(i),py(v)); });
     ctx.stroke();
     if(ma50[n-1]){
-      el('ci-ma50').textContent='$'+Math.round(ma50[n-1]).toLocaleString();
+      el('ci-ma50').textContent=fmtPrice(ma50[n-1]);
       // Right-side label
       ctx.fillStyle='rgba(167,102,255,.15)'; ctx.fillRect(W-pR+1,py(ma50[n-1])-9,pR-1,16);
       ctx.fillStyle='#a766ff'; ctx.font='bold 9px IBM Plex Mono,monospace'; ctx.textAlign='left';
@@ -1564,10 +1682,77 @@ function drawCandles() {
     ma20.forEach((v,i)=>{ if(v==null)return; fs?(ctx.moveTo(px(i),py(v)),fs=false):ctx.lineTo(px(i),py(v)); });
     ctx.stroke();
     if(ma20[n-1]){
-      el('ci-ma20').textContent='$'+Math.round(ma20[n-1]).toLocaleString();
+      el('ci-ma20').textContent=fmtPrice(ma20[n-1]);
       ctx.fillStyle='rgba(255,153,51,.15)'; ctx.fillRect(W-pR+1,py(ma20[n-1])-9,pR-1,16);
       ctx.fillStyle='#ff9933'; ctx.font='bold 9px IBM Plex Mono,monospace'; ctx.textAlign='left';
       ctx.fillText('MA20',W-pR+4,py(ma20[n-1])+4);
+    }
+  }
+
+  // ── Fibonacci Retracement ──
+  if(S.overlays.fib) {
+    const fibs = calcFibLevels(D);
+    fibs.forEach(f => {
+      const y = py(f.price);
+      if(y < pT-2 || y > pT+cH+2) return; // out of view
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5,3]);
+      ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
+      ctx.setLineDash([]);
+      // Right-side price + label
+      ctx.fillStyle = f.color;
+      ctx.font = 'bold 8px IBM Plex Mono,monospace';
+      ctx.textAlign = 'left';
+      const priceLabel = fmtPrice(f.price);
+      ctx.fillText(f.label+'  '+priceLabel, W-pR+4, y-2);
+      // Highlight band if current price near level (within 0.8%)
+      if(D[n-1] && Math.abs(D[n-1].c - f.price)/f.price < 0.008) {
+        ctx.fillStyle = f.color.replace('.65)','.08)').replace('.70)','.10)');
+        ctx.fillRect(pL, y-5, W-pL-pR, 10);
+      }
+    });
+    ctx.fillStyle='rgba(252,211,77,.55)';
+    ctx.font='bold 8px IBM Plex Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText('FIB',4,pT+20);
+  }
+
+  // ── ZigZag / Elliott Wave ──
+  if(S.overlays.wave) {
+    const pivots = calcZigZag(D, 0.028);
+    if(pivots.length >= 2) {
+      // Draw zigzag lines
+      ctx.strokeStyle = 'rgba(20,241,149,.55)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3,2]);
+      ctx.beginPath();
+      pivots.forEach((p2,i) => {
+        const x=px(p2.idx), y=py(p2.val);
+        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Label last 7 pivots as wave numbers ①②③④⑤ A B C
+      const waveNums = ['①','②','③','④','⑤','A','B','C'];
+      const recent = pivots.slice(-8);
+      recent.forEach((p2,i) => {
+        const x=px(p2.idx), y=py(p2.val);
+        const lbl = waveNums[i] || String(i+1);
+        const isH = p2.type==='H';
+        // Dot at pivot
+        ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2);
+        ctx.fillStyle = isH?'rgba(248,113,113,.9)':'rgba(74,222,128,.9)';
+        ctx.fill();
+        // Number label
+        ctx.fillStyle = isH?'#f87171':'#4ade80';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(lbl, x, isH ? y-12 : y+18);
+      });
+      ctx.fillStyle='rgba(20,241,149,.55)';
+      ctx.font='bold 8px IBM Plex Mono,monospace'; ctx.textAlign='left';
+      ctx.fillText('WAVE',4,pT+32);
     }
   }
 
@@ -1583,7 +1768,7 @@ function drawCandles() {
   ctx.fillStyle=isUp?'rgba(34,197,94,.9)':'rgba(239,68,68,.9)';
   ctx.fillRect(W-pR+1,cpY-10,pR-1,20);
   ctx.fillStyle='#fff'; ctx.font='bold 10px IBM Plex Mono,monospace'; ctx.textAlign='left';
-  ctx.fillText('$'+Math.round(lastClose).toLocaleString(),W-pR+4,cpY+4);
+  ctx.fillText(fmtPrice(lastClose),W-pR+4,cpY+4);
 
   // ── Candles ──
   D.forEach((d,i)=>{
@@ -1643,10 +1828,10 @@ function drawCandles() {
   ctx.fillText('VOL', pL-68, vTop+vH/2+4);
 
   // ── OHLC display ──
-  el('ci-o').textContent='$'+Math.round(D[n-1].o).toLocaleString();
-  el('ci-h').textContent='$'+Math.round(D[n-1].h).toLocaleString();
-  el('ci-l').textContent='$'+Math.round(D[n-1].l).toLocaleString();
-  el('ci-c').textContent='$'+Math.round(D[n-1].c).toLocaleString();
+  el('ci-o').textContent=fmtPrice(D[n-1].o);
+  el('ci-h').textContent=fmtPrice(D[n-1].h);
+  el('ci-l').textContent=fmtPrice(D[n-1].l);
+  el('ci-c').textContent=fmtPrice(D[n-1].c);
 }
 
 /* ════════════════════════════════════════
@@ -1981,7 +2166,7 @@ async function loadData() {
     S.currentPrice = S.candles[S.candles.length-1].c;
     S.isLive = false;
     el('apiBadge').textContent='DEMO DATA'; el('apiBadge').className='api-badge api-demo';
-    const mockPriceData = {usd:S.currentPrice, usd_24h_change:(Math.random()-0.45)*4, usd_24h_vol:3.2e9, usd_market_cap:1.6e12};
+    const mockPriceData = {usd:S.currentPrice, usd_24h_change:(Math.random()-0.45)*4, usd_24h_vol:3.2e9, usd_market_cap:S.currentPrice*COINS[S.coin].mockPrice*1e7};
     processAll(mockPriceData);
   }
   el('refreshBtn').classList.remove('spinning');
@@ -2071,6 +2256,27 @@ async function setTf(days, btn) {
   S.signal=sig;
   if(sig){ renderIndicatorCards(sig); renderSignalSection(sig); renderRSI(sig); renderMACD(sig); }
   drawCandles();
+}
+
+async function switchCoin(sym, btn) {
+  if(S.coin === sym) return;
+  S.coin = sym;
+  S.chatReady = false;
+  // Update active tab
+  document.querySelectorAll('.coin-tab').forEach(b=>b.classList.remove('active'));
+  const tab = document.getElementById('ctab-'+sym);
+  if(tab) tab.classList.add('active');
+  // Update labels immediately
+  const coin = COINS[sym];
+  const navLbl=el('navCoinLabel'); if(navLbl) navLbl.textContent=sym;
+  const statLbl=el('statCoinLabel'); if(statLbl) statLbl.textContent=sym+' Price';
+  const chartT=el('chartTitle'); if(chartT) chartT.textContent=sym+'/USD';
+  const sigTag=el('sigCoinTag'); if(sigTag) sigTag.textContent=coin.name+' / USD · AI Signal';
+  el('navPrice').textContent = '...';
+  el('priceUSD').textContent = '...';
+  stopCountdown();
+  await loadData();
+  showToast('เปลี่ยนเป็น '+coin.name+' ('+sym+'/USD)');
 }
 
 function saveSettings() {
