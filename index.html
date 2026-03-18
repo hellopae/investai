@@ -238,18 +238,36 @@ canvas#mainChart { display:block; width:100%; }
 .ps-val.r { color:var(--red); }
 .ps-val.b { color:var(--blueb); }
 .ps-sub { font-size:.72rem; color:var(--text2); margin-top:3px; }
-.trade-list { display:flex; flex-direction:column; gap:7px; max-height:320px; overflow-y:auto; }
-.trade-item { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); }
-.trade-side { font-size:.68rem; font-weight:800; padding:3px 9px; border-radius:4px; min-width:40px; text-align:center; }
-.trade-side.buy { background:var(--gd); color:var(--green); }
+.trade-list { display:flex; flex-direction:column; gap:0; overflow-y:auto; max-height:520px; border:1px solid var(--border); border-radius:var(--rs); overflow:hidden; }
+.trade-th { display:grid; grid-template-columns:56px 54px 80px 90px 90px 80px 72px 72px 68px; gap:0; background:var(--bg2); border-bottom:1px solid var(--border); }
+.trade-th-cell { font-size:.6rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; padding:7px 8px; }
+.trade-item { display:grid; grid-template-columns:56px 54px 80px 90px 90px 80px 72px 72px 68px; gap:0; padding:0; background:transparent; border:none; border-bottom:1px solid rgba(37,99,235,.07); transition:background .15s; }
+.trade-item:hover { background:var(--bludim); }
+.trade-item:last-child { border-bottom:none; }
+.trade-cell { font-family:var(--mono); font-size:.72rem; color:var(--text2); padding:9px 8px; display:flex; align-items:center; }
+.trade-cell.label { font-family:var(--font); font-size:.7rem; color:var(--text3); }
+.trade-side { font-size:.62rem; font-weight:800; padding:2px 7px; border-radius:3px; min-width:36px; text-align:center; display:inline-block; }
+.trade-side.buy  { background:var(--gd); color:var(--green); }
 .trade-side.sell { background:var(--rd); color:var(--red); }
-.trade-asset { font-weight:700; font-size:.85rem; flex:1; color:var(--btc); }
-.trade-price { font-family:var(--mono); font-size:.78rem; color:var(--text2); }
-.trade-pnl { font-family:var(--mono); font-size:.85rem; font-weight:700; min-width:75px; text-align:right; }
-.trade-status { font-size:.65rem; padding:3px 9px; border-radius:4px; font-weight:600; }
-.trade-status.open { background:var(--bludim); color:var(--blueb); border:1px solid rgba(59,130,246,.2); }
-.trade-status.closed { background:var(--bg); color:var(--text3); border:1px solid var(--border); }
-.trade-date { font-size:.65rem; color:var(--text3); min-width:55px; text-align:right; }
+.trade-pnl-pos { color:var(--green); font-weight:700; }
+.trade-pnl-neg { color:var(--red); font-weight:700; }
+.trade-status { font-size:.6rem; padding:2px 7px; border-radius:3px; font-weight:700; }
+.trade-status.open   { background:var(--bludim); color:var(--blueb); }
+.trade-status.closed { background:var(--bg); color:var(--text3); }
+/* ════════════════════════════════════════
+   BINANCE BOT
+════════════════════════════════════════ */
+.bot-status-bar { display:flex; align-items:center; gap:12px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:12px 16px; margin-bottom:14px; flex-wrap:wrap; }
+.bot-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.bot-dot.on  { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,.5); animation:pulse 2s infinite; }
+.bot-dot.off { background:var(--text3); }
+.bot-dot.warn{ background:var(--yellow); }
+.bot-label   { font-size:.78rem; font-weight:700; color:var(--text); }
+.bot-sub     { font-size:.7rem; color:var(--text2); flex:1; }
+.bot-action  { font-family:var(--mono); font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:4px; }
+.bot-action.buy  { background:var(--gd); color:var(--green); }
+.bot-action.sell { background:var(--rd); color:var(--red); }
+.bot-action.hold { background:var(--yd); color:var(--yellow); }
 .empty-trades { text-align:center; padding:32px; color:var(--text2); font-size:.85rem; }
 
 /* ════════════════════════════════════════
@@ -920,18 +938,31 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
     <div class="ps-card"><div class="ps-label">Portfolio Value</div><div class="ps-val b" id="ps-val">$10,000</div><div class="ps-sub" id="ps-vsub">0 trades</div></div>
     <div class="ps-card"><div class="ps-label">Unrealized P&L</div><div class="ps-val" id="ps-unrealized">--</div><div class="ps-sub" id="ps-usub">open position</div></div>
   </div>
-  <div class="g2">
-    <div class="card">
-      <div class="card-title" style="margin-bottom:14px">Portfolio Performance</div>
-      <canvas id="perfChart" height="200"></canvas>
+  <!-- Position Size Setting -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <span style="font-size:.75rem;color:var(--text2)">💰 ขนาด Position จำลอง:</span>
+    <select class="form-input" id="tradeSizeSelect" onchange="S.tradeSize=parseInt(this.value)" style="width:auto;padding:4px 10px;font-size:.76rem">
+      <option value="100">$100</option>
+      <option value="500">$500</option>
+      <option value="1000" selected>$1,000</option>
+      <option value="5000">$5,000</option>
+      <option value="10000">$10,000</option>
+    </select>
+    <span style="font-size:.72rem;color:var(--text3)">ใช้กับทุก trade ใหม่ที่เปิด</span>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:14px">Portfolio Performance</div>
+    <canvas id="perfChart" height="180"></canvas>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin-bottom:0">📋 Trade History</div>
+      <span style="font-size:.72rem;color:var(--text2)">แสดงล่าสุด 30 รายการ</span>
     </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="card-title" style="margin-bottom:0">Trade History</div>
-      </div>
-      <div class="trade-list" id="tradeList">
-        <div class="empty-trades">ยังไม่มีรายการ รอสัญญาณ AI...</div>
-      </div>
+    <div class="trade-list" id="tradeList" style="max-height:460px;overflow-x:auto">
+      <div class="empty-trades" style="padding:20px;text-align:center;color:var(--text3)">ยังไม่มีรายการ รอสัญญาณ AI...</div>
     </div>
   </div>
 </section>
@@ -1006,6 +1037,62 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
           4. Copy token มาวางด้านบน
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Binance Bot -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-title" style="margin-bottom:4px">🤖 Binance Auto-Trading Bot</div>
+    <p style="font-size:.73rem;color:var(--text2);margin-bottom:14px;line-height:1.6">Bot จะส่งคำสั่ง Order อัตโนมัติเมื่อ AI Signal เปลี่ยน · แนะนำเริ่มด้วย <strong style="color:var(--yellow)">Testnet</strong> ก่อนเสมอ</p>
+
+    <!-- Bot status bar -->
+    <div class="bot-status-bar" id="botStatusBar">
+      <div class="bot-dot off" id="botDot"></div>
+      <span class="bot-label" id="botLabel">Bot: ปิดอยู่</span>
+      <span class="bot-sub" id="botSub">กรอก API Key แล้วเปิด Bot</span>
+      <span class="bot-action hold" id="botLastAction">--</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div>
+        <label class="form-label">Binance API Key</label>
+        <input type="password" class="form-input" id="bnApiKey" placeholder="API Key...">
+      </div>
+      <div>
+        <label class="form-label">Binance API Secret</label>
+        <input type="password" class="form-input" id="bnApiSecret" placeholder="API Secret...">
+      </div>
+      <div>
+        <label class="form-label">Order Size (USDT per trade)</label>
+        <input type="number" class="form-input" id="bnOrderSize" value="100" min="10" step="10">
+      </div>
+      <div>
+        <label class="form-label">Mode</label>
+        <select class="form-input" id="bnTestnet">
+          <option value="1">🧪 Testnet (testnet.binance.vision) — ปลอดภัย</option>
+          <option value="0">⚠️ Real Binance (api.binance.com) — เงินจริง!</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn-primary" onclick="saveBotSettings()" style="max-width:160px">💾 บันทึก Bot Config</button>
+      <button id="botToggleBtn" onclick="toggleBot()" style="background:var(--gd);border:1px solid rgba(34,197,94,.3);color:var(--green);border-radius:var(--rs);padding:8px 18px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--font)">▶ เปิด Bot</button>
+      <button onclick="testBotPing()" style="background:var(--bludim);border:1px solid var(--border);color:var(--blueb);border-radius:var(--rs);padding:8px 14px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--font)">📡 ทดสอบ Connection</button>
+    </div>
+
+    <div class="info-box" style="margin-bottom:12px">
+      <strong>🔑 วิธีสร้าง Binance Testnet API Key:</strong><br>
+      1. ไปที่ <strong>testnet.binance.vision</strong> → Login ด้วย GitHub<br>
+      2. "Generate HMAC_SHA256 Key" → Copy API Key + Secret<br>
+      3. วางด้านบน → กด บันทึก → กด เปิด Bot<br>
+      <span style="color:var(--yellow)">⚠️ สำหรับ Real Binance: เปิด "Enable Spot & Margin Trading" ใน API settings</span>
+    </div>
+
+    <!-- Bot log -->
+    <div style="font-size:.68rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Bot Activity Log</div>
+    <div id="botLog" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px;font-family:var(--mono);font-size:.7rem;color:var(--text2);max-height:140px;overflow-y:auto;line-height:1.8">
+      <span style="color:var(--text3)">-- รอการทำงาน --</span>
     </div>
   </div>
 
@@ -1092,6 +1179,17 @@ const S = {
   perfHistory: [],
   fearGreed: null,
   chatReady: false,
+  tradeSize: 1000,   // virtual USD per trade
+  bot: {
+    enabled: false,
+    apiKey: '',
+    apiSecret: '',
+    testnet: true,
+    orderSizeUSD: 100,
+    lastAction: null,
+    lastOrderId: null,
+    log: [],
+  },
 };
 
 /* ════════════════════════════════════════
@@ -1359,8 +1457,69 @@ function generateSignal(candles) {
   let vtSig, vtScore=0;
   indicators.push({name:'Volume Trend', val:'N/A', sig:'HOLD', score:0});
 
+  // ── Fear & Greed Index (contrarian) ── max ±2
+  let fngScore=0, fngSig='HOLD';
+  if(S.fearGreed) {
+    const fngVal = parseInt(S.fearGreed.value);
+    if(fngVal<20)      { fngScore=2; fngSig='BUY';  reasons.push('🟢 Fear&Greed ต่ำมาก ('+fngVal+') — Extreme Fear = โอกาสซื้อ'); }
+    else if(fngVal<35) { fngScore=1; fngSig='BUY';  reasons.push('🟡 Fear&Greed อยู่ใน Fear zone ('+fngVal+')'); }
+    else if(fngVal>80) { fngScore=-2;fngSig='SELL'; reasons.push('🔴 Fear&Greed สูงมาก ('+fngVal+') — Extreme Greed = ระวัง'); }
+    else if(fngVal>65) { fngScore=-1;fngSig='SELL'; reasons.push('🟡 Fear&Greed อยู่ใน Greed zone ('+fngVal+')'); }
+    else { fngSig='HOLD'; }
+    score+=fngScore;
+    indicators.push({name:'Fear & Greed', val:S.fearGreed.value+' ('+S.fearGreed.value_classification.split(' ')[0]+')', sig:fngSig, score:fngScore});
+  }
+
+  // ── Fibonacci Retracement ── max ±2
+  let fibScore=0, fibSig='HOLD', fibLabel='--';
+  {
+    const fibs = calcFibLevels(candles);
+    const midFib = fibs.find(f=>f.ratio===0.5);
+    let nearest=null, nearestDist=Infinity;
+    fibs.forEach(f=>{ const d=Math.abs(lastClose-f.price)/f.price; if(d<nearestDist){nearestDist=d;nearest=f;} });
+    fibLabel = nearest ? nearest.label.split(' ')[0] : '--';
+    if(nearest && nearestDist<0.015) {
+      const aboveFib = lastClose >= nearest.price;
+      if(nearest.ratio===0.618||nearest.ratio===0.382) {
+        if(aboveFib)  { fibScore=2; fibSig='BUY';  reasons.push('🟢 ราคาอยู่เหนือ Fibonacci '+fibLabel+' ★ (แนวรับสำคัญ)'); }
+        else          { fibScore=-2;fibSig='SELL'; reasons.push('🔴 ราคาอยู่ใต้ Fibonacci '+fibLabel+' (แนวต้านสำคัญ)'); }
+      } else {
+        fibScore = aboveFib?1:-1; fibSig = aboveFib?'BUY':'SELL';
+      }
+    } else if(midFib) {
+      fibScore = lastClose>midFib.price?1:-1;
+      fibSig   = lastClose>midFib.price?'BUY':'SELL';
+    }
+    score+=fibScore;
+    indicators.push({name:'Fibonacci', val:fibLabel, sig:fibSig, score:fibScore});
+  }
+
+  // ── Elliott Wave (ZigZag) ── max ±2
+  let waveScore=0, waveSig='HOLD', waveLabel='--';
+  {
+    const zigzag = calcZigZag(candles, 0.028);
+    if(zigzag.length>=2) {
+      const lp=zigzag[zigzag.length-1];
+      const distPct=(lastClose-lp.val)/lp.val;
+      if(lp.type==='L') {
+        waveLabel='Bottom ①';
+        if(distPct<0.02)      { waveScore=2; waveSig='BUY';  reasons.push('🟢 ZigZag ตรวจพบจุดต่ำใหม่ — โอกาสเริ่มคลื่นขาขึ้น Wave ①'); }
+        else if(distPct<0.08) { waveScore=1; waveSig='BUY';  waveLabel='Rising ③'; }
+        else                  { waveScore=0; waveSig='HOLD'; waveLabel='Mid ④'; }
+      } else {
+        waveLabel='Top ⑤';
+        const dropPct=(lp.val-lastClose)/lp.val;
+        if(dropPct<0.02)      { waveScore=-2;waveSig='SELL'; reasons.push('🔴 ZigZag ตรวจพบจุดสูงใหม่ — อาจเริ่มคลื่นขาลง Wave A'); }
+        else if(dropPct<0.08) { waveScore=-1;waveSig='SELL'; waveLabel='Falling A'; }
+        else                  { waveScore=0; waveSig='HOLD'; waveLabel='Mid B'; }
+      }
+    }
+    score+=waveScore;
+    indicators.push({name:'Elliott Wave', val:waveLabel, sig:waveSig, score:waveScore});
+  }
+
   // Determine final signal
-  const maxScore = 13; // max possible
+  const maxScore = 19; // max possible (13 base + 2 F&G + 2 Fib + 2 Wave)
   const confRaw = Math.abs(score)/maxScore*100;
   const confidence = Math.min(95, Math.max(35, 40+confRaw*0.55));
 
@@ -1850,14 +2009,16 @@ function manualTrade(side) {
   if(!S.currentPrice) { showToast('รอราคาโหลดก่อน'); return; }
   const openTrade = S.paperTrades.find(t=>t.status==='open');
   if(openTrade) { showToast('⚠️ มี position เปิดอยู่แล้ว — กด "ปิด Position" ก่อน'); return; }
+  const sz = S.tradeSize||1000;
   S.paperTrades.push({
     id: Date.now(), side,
+    coin: S.coin, coinQty: sz/S.currentPrice, amount: sz,
     entryPrice: S.currentPrice, entryTime: Date.now(),
     signal: 'MANUAL', status: 'open',
-    exitPrice: null, exitTime: null, pnlPct: null,
+    exitPrice: null, exitTime: null, pnlPct: null, pnlUSD: null,
   });
   savePaper(); renderPaper();
-  showToast(`✅ เปิด ${side.toUpperCase()} @ $${Math.round(S.currentPrice).toLocaleString()}`);
+  showToast(`✅ เปิด ${side.toUpperCase()} @ ${fmtPrice(S.currentPrice)} | ขนาด $${sz.toLocaleString()}`);
 }
 
 function closeOpenTrade() {
@@ -1871,10 +2032,12 @@ function closeOpenTrade() {
     ? (S.currentPrice - openTrade.entryPrice) / openTrade.entryPrice * 100
     : (openTrade.entryPrice - S.currentPrice) / openTrade.entryPrice * 100;
   openTrade.pnlPct = pnlPct;
+  openTrade.pnlUSD = (openTrade.amount||S.tradeSize||1000) * pnlPct/100;
   const startVal = S.perfHistory.length ? S.perfHistory[S.perfHistory.length-1].val : 10000;
   S.perfHistory.push({t: Date.now(), val: startVal*(1+pnlPct/100), pnl: pnlPct});
   savePaper(); renderPaper();
-  showToast(`${pnlPct>=0?'✅ กำไร':'❌ ขาดทุน'} ${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}% — position ปิดแล้ว`);
+  showToast(`${pnlPct>=0?'✅ กำไร':'❌ ขาดทุน'} ${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}% (${pnlPct>=0?'+':''}$${Math.abs(openTrade.pnlUSD||0).toFixed(2)})`);
+
 }
 
 function processPaperTrade(sig) {
@@ -1895,6 +2058,7 @@ function processPaperTrade(sig) {
         ? (S.currentPrice-openTrade.entryPrice)/openTrade.entryPrice*100
         : (openTrade.entryPrice-S.currentPrice)/openTrade.entryPrice*100;
       openTrade.pnlPct=pnlPct;
+      openTrade.pnlUSD=(openTrade.amount||S.tradeSize||1000)*pnlPct/100;
       const startVal = S.perfHistory.length?S.perfHistory[S.perfHistory.length-1].val:10000;
       const newVal = startVal*(1+pnlPct/100);
       S.perfHistory.push({t:Date.now(),val:newVal,pnl:pnlPct});
@@ -1904,11 +2068,13 @@ function processPaperTrade(sig) {
 
   // Open new trade on BUY/SELL signal (not HOLD, not if already open)
   if(!openTrade && (sig.isBuy||sig.isSell) && !sig.sigName.includes('WEAK')) {
+    const sz=S.tradeSize||1000;
     S.paperTrades.push({
       id:Date.now(), side:sig.isBuy?'buy':'sell',
+      coin:S.coin, coinQty:sz/S.currentPrice, amount:sz,
       entryPrice:S.currentPrice, entryTime:Date.now(),
       signal:sig.sigName, status:'open',
-      exitPrice:null, exitTime:null, pnlPct:null,
+      exitPrice:null, exitTime:null, pnlPct:null, pnlUSD:null,
     });
     savePaper();
   }
@@ -1963,20 +2129,42 @@ function renderPaper() {
 
   // Render trade list
   const list=document.getElementById('tradeList');
-  if(!trades.length){ list.innerHTML='<div class="empty-trades">ยังไม่มีรายการ รอสัญญาณ AI...</div>'; return; }
+  if(!trades.length){ list.innerHTML='<div class="empty-trades" style="padding:20px;text-align:center;color:var(--text3)">ยังไม่มีรายการ รอสัญญาณ AI...</div>'; return; }
   const sorted=[...trades].reverse();
-  list.innerHTML=sorted.slice(0,20).map(t=>{
-    const pnl=t.status==='open'&&S.currentPrice?(t.side==='buy'?(S.currentPrice-t.entryPrice)/t.entryPrice*100:(t.entryPrice-S.currentPrice)/t.entryPrice*100):t.pnlPct;
-    const pnlStr=pnl!=null?(pnl>=0?'+':'')+pnl.toFixed(2)+'%':'--';
-    const pnlCol=pnl>0?'up':pnl<0?'down':'';
-    const d=new Date(t.entryTime);
-    const dateStr=d.toLocaleDateString('th-TH',{month:'short',day:'numeric'});
+  const fmtTime = ts => {
+    const d = new Date(ts);
+    return d.toLocaleDateString('th-TH',{month:'short',day:'numeric'})+'<br><span style="color:var(--text3);font-size:.62rem">'+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+'</span>';
+  };
+  list.innerHTML = `<div class="trade-th">
+    <div class="trade-th-cell">ทิศทาง</div>
+    <div class="trade-th-cell">เหรียญ</div>
+    <div class="trade-th-cell">เวลาเข้า</div>
+    <div class="trade-th-cell">ราคาเข้า</div>
+    <div class="trade-th-cell">ราคาออก</div>
+    <div class="trade-th-cell">จำนวน</div>
+    <div class="trade-th-cell">P&L %</div>
+    <div class="trade-th-cell">P&L $</div>
+    <div class="trade-th-cell">สถานะ</div>
+  </div>`+sorted.slice(0,30).map(t=>{
+    const livePnlPct = t.status==='open'&&S.currentPrice
+      ? (t.side==='buy'?(S.currentPrice-t.entryPrice)/t.entryPrice*100:(t.entryPrice-S.currentPrice)/t.entryPrice*100)
+      : t.pnlPct;
+    const pnl = livePnlPct;
+    const sz  = t.amount||S.tradeSize||1000;
+    const pnlUSD = pnl!=null ? sz*pnl/100 : (t.pnlUSD||null);
+    const pnlCls = pnl>0?'trade-pnl-pos':pnl<0?'trade-pnl-neg':'';
+    const qty   = t.coinQty!=null ? t.coinQty.toFixed(5) : (sz/t.entryPrice).toFixed(5);
+    const coin  = t.coin||'BTC';
     return `<div class="trade-item">
-      <div class="trade-side ${t.side}">${t.side.toUpperCase()}</div>
-      <div style="flex:1"><div class="trade-asset">BTC/USD</div><div class="trade-price">Entry: $${Math.round(t.entryPrice).toLocaleString()}</div></div>
-      <div class="trade-pnl ${pnlCol}">${pnlStr}</div>
-      <div class="trade-status ${t.status}">${t.status==='open'?'Open':'Closed'}</div>
-      <div class="trade-date">${dateStr}</div>
+      <div class="trade-cell"><span class="trade-side ${t.side}">${t.side==='buy'?'BUY':'SELL'}</span></div>
+      <div class="trade-cell" style="color:var(--btc);font-weight:700">${coin}/USD</div>
+      <div class="trade-cell label">${fmtTime(t.entryTime)}</div>
+      <div class="trade-cell">${fmtPrice(t.entryPrice)}</div>
+      <div class="trade-cell">${t.exitPrice?fmtPrice(t.exitPrice):'<span style="color:var(--text3)">--</span>'}</div>
+      <div class="trade-cell" style="color:var(--text2)">${qty}<br><span style="font-size:.62rem;color:var(--text3)">${coin}</span></div>
+      <div class="trade-cell ${pnlCls}">${pnl!=null?(pnl>=0?'+':'')+pnl.toFixed(2)+'%':'--'}</div>
+      <div class="trade-cell ${pnlCls}">${pnlUSD!=null?(pnlUSD>=0?'+':'')+pnlUSD.toFixed(2):'--'}</div>
+      <div class="trade-cell"><span class="trade-status ${t.status}">${t.status==='open'?'Open':'Closed'}</span></div>
     </div>`;
   }).join('');
 
@@ -2124,11 +2312,12 @@ function checkSignalChange(newSig) {
     const isBuy=newSig.isBuy, isSell=newSig.isSell;
     const notify=(isBuy&&document.getElementById('tog-buy')?.checked)||(isSell&&document.getElementById('tog-sell')?.checked);
     if(notify) {
-      const msg=`🤖 Invest AI Signal\n${newSig.sigName} — BTC/USD\nราคา: $${Math.round(newSig.lastClose).toLocaleString()}\nConfidence: ${newSig.confidence}%`;
+      const msg=`🤖 Invest AI Signal\n${newSig.sigName} — ${S.coin}/USD\nราคา: ${fmtPrice(newSig.lastClose)}\nScore: ${newSig.score} | Confidence: ${newSig.confidence}%`;
       sendBrowserNotif('Invest AI Signal Changed',`${prev.sigName} → ${newSig.sigName}`);
       sendLineMsg(msg);
       showToast(`Signal: ${prev.sigName} → ${newSig.sigName}`);
     }
+    runBot(newSig); // fire bot if enabled
   }
   S.lastSignal=newSig;
 }
@@ -2286,6 +2475,171 @@ function saveSettings() {
 }
 
 /* ════════════════════════════════════════
+   BINANCE AUTO-TRADING BOT
+════════════════════════════════════════ */
+async function signHmac(secret, message) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function binanceRequest(method, path, params={}) {
+  const base = S.bot.testnet ? 'https://testnet.binance.vision' : 'https://api.binance.com';
+  params.timestamp = Date.now();
+  params.recvWindow = 5000;
+  const qs = Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+  const sig = await signHmac(S.bot.apiSecret, qs);
+  const url = `${base}${path}?${qs}&signature=${sig}`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'X-MBX-APIKEY': S.bot.apiKey, 'Content-Type': 'application/x-www-form-urlencoded' },
+    ...(method==='POST' ? {body: qs+'&signature='+sig} : {}),
+  });
+  if(!res.ok) { const err=await res.json(); throw new Error(err.msg||res.status); }
+  return res.json();
+}
+
+async function binancePing() {
+  const base = S.bot.testnet ? 'https://testnet.binance.vision' : 'https://api.binance.com';
+  const res = await fetch(`${base}/api/v3/ping`);
+  return res.ok;
+}
+
+async function testBotPing() {
+  botLog('📡 กำลัง ping Binance...');
+  try {
+    const ok = await binancePing();
+    if(ok) { botLog('✅ เชื่อมต่อสำเร็จ ('+(S.bot.testnet?'Testnet':'Real')+')'); showToast('เชื่อมต่อ Binance สำเร็จ ✓'); }
+    else   { botLog('❌ Ping ล้มเหลว'); }
+  } catch(e) {
+    botLog('❌ CORS หรือ Network error: '+e.message);
+    showToast('CORS blocked — ดู log สำหรับคำแนะนำ');
+  }
+}
+
+async function executeBotOrder(side, reason) {
+  if(!S.bot.enabled||!S.bot.apiKey||!S.bot.apiSecret) return;
+  const sym = (S.coin||'BTC')+'USDT';
+  const sz  = S.bot.orderSizeUSD;
+  // Calculate quantity from current price
+  const price = S.currentPrice;
+  if(!price) { botLog('⚠️ ไม่มีราคา ยกเลิก order'); return; }
+  const rawQty = sz/price;
+  // Round to Binance lot size (0.00001 for BTC, 0.001 for ETH, etc.)
+  const lotStep = price>10000?0.00001:price>100?0.001:price>1?0.01:1;
+  const qty = (Math.floor(rawQty/lotStep)*lotStep).toFixed(5);
+  botLog(`🤖 ${side.toUpperCase()} ${qty} ${S.coin} @ ~${fmtPrice(price)} — ${reason}`);
+  try {
+    const res = await binanceRequest('POST', '/api/v3/order', {
+      symbol: sym, side: side.toUpperCase(),
+      type: 'MARKET', quantity: qty,
+    });
+    S.bot.lastOrderId = res.orderId;
+    S.bot.lastAction  = side;
+    botLog(`✅ Order OK #${res.orderId} | ${res.status}`);
+    showToast(`Bot: ${side.toUpperCase()} ${qty} ${S.coin} — order ส่งแล้ว`);
+    updateBotUI();
+  } catch(e) {
+    const msg = e.message||'';
+    if(msg.includes('Failed to fetch')||msg.includes('CORS')||msg.includes('NetworkError')) {
+      botLog('⚠️ CORS blocked — Binance ไม่รองรับ browser โดยตรง');
+      botLog('💡 วิธีแก้: รัน CORS proxy บนเครื่องตัวเอง:');
+      botLog('   pip install flask requests && python proxy.py');
+      botLog('   แล้วเปลี่ยน URL ใน code เป็น http://localhost:5001');
+    } else {
+      botLog('❌ Order ล้มเหลว: '+msg);
+    }
+    showToast('Bot order error — ดู log ใน Settings');
+  }
+}
+
+function botLog(msg) {
+  const now = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  S.bot.log.unshift('['+now+'] '+msg);
+  if(S.bot.log.length>50) S.bot.log.pop();
+  const logEl = el('botLog');
+  if(logEl) logEl.innerHTML = S.bot.log.map(l=>`<div>${l}</div>`).join('') || '<span style="color:var(--text3)">-- รอการทำงาน --</span>';
+  // Also update last action label
+  const lastEl = el('botLastAction');
+  if(lastEl && S.bot.lastAction) {
+    lastEl.textContent = S.bot.lastAction.toUpperCase()+' sent';
+    lastEl.className = 'bot-action '+(S.bot.lastAction==='buy'?'buy':S.bot.lastAction==='sell'?'sell':'hold');
+  }
+}
+
+function updateBotUI() {
+  const dot = el('botDot'), lbl = el('botLabel'), sub = el('botSub'), btn = el('botToggleBtn');
+  if(!dot) return;
+  if(S.bot.enabled) {
+    dot.className='bot-dot on'; lbl.textContent='Bot: เปิดอยู่';
+    sub.textContent=(S.bot.testnet?'Testnet':'Real Binance')+' · $'+S.bot.orderSizeUSD+'/trade';
+    if(btn){btn.textContent='⏹ ปิด Bot';btn.style.background='var(--rd)';btn.style.color='var(--red)';btn.style.borderColor='rgba(239,68,68,.3)';}
+  } else {
+    dot.className='bot-dot off'; lbl.textContent='Bot: ปิดอยู่';
+    sub.textContent=S.bot.apiKey?'มี API Key — กด เปิด Bot':'กรอก API Key แล้วเปิด Bot';
+    if(btn){btn.textContent='▶ เปิด Bot';btn.style.background='var(--gd)';btn.style.color='var(--green)';btn.style.borderColor='rgba(34,197,94,.3)';}
+  }
+}
+
+function saveBotSettings() {
+  S.bot.apiKey       = document.getElementById('bnApiKey')?.value.trim()||'';
+  S.bot.apiSecret    = document.getElementById('bnApiSecret')?.value.trim()||'';
+  S.bot.orderSizeUSD = parseFloat(document.getElementById('bnOrderSize')?.value)||100;
+  S.bot.testnet      = document.getElementById('bnTestnet')?.value==='1';
+  // Store encrypted? No — just warn user about localStorage
+  localStorage.setItem('investai_bot_cfg', JSON.stringify({
+    apiKey:S.bot.apiKey, apiSecret:S.bot.apiSecret,
+    orderSizeUSD:S.bot.orderSizeUSD, testnet:S.bot.testnet
+  }));
+  updateBotUI();
+  showToast('บันทึก Bot Config แล้ว ✓');
+  botLog('💾 Config saved — '+(S.bot.testnet?'Testnet':'Real')+' $'+S.bot.orderSizeUSD+'/trade');
+}
+
+function loadBotSettings() {
+  try {
+    const cfg=JSON.parse(localStorage.getItem('investai_bot_cfg')||'{}');
+    if(cfg.apiKey)    { S.bot.apiKey=cfg.apiKey;    const el2=document.getElementById('bnApiKey');    if(el2)el2.value=cfg.apiKey; }
+    if(cfg.apiSecret) { S.bot.apiSecret=cfg.apiSecret; const el2=document.getElementById('bnApiSecret'); if(el2)el2.value=cfg.apiSecret; }
+    if(cfg.orderSizeUSD){ S.bot.orderSizeUSD=cfg.orderSizeUSD; const el2=document.getElementById('bnOrderSize'); if(el2)el2.value=cfg.orderSizeUSD; }
+    S.bot.testnet = cfg.testnet!==false;
+    const selEl=document.getElementById('bnTestnet'); if(selEl) selEl.value=S.bot.testnet?'1':'0';
+  } catch(e){}
+  updateBotUI();
+}
+
+function toggleBot() {
+  if(!S.bot.apiKey||!S.bot.apiSecret) {
+    showToast('กรุณากรอก API Key และ Secret ก่อน');
+    return;
+  }
+  S.bot.enabled = !S.bot.enabled;
+  updateBotUI();
+  botLog(S.bot.enabled ? '🟢 Bot เปิดแล้ว — รอสัญญาณ AI' : '🔴 Bot ปิดแล้ว');
+  showToast('Bot: '+(S.bot.enabled?'เปิด ✓':'ปิด'));
+}
+
+async function runBot(sig) {
+  if(!S.bot.enabled||!sig) return;
+  const prev = S.lastSignal;
+  if(!prev||prev.sigName===sig.sigName) return; // no change
+
+  const isBuyNow  = sig.sigName.includes('BUY')&&!sig.sigName.includes('WEAK');
+  const isSellNow = sig.sigName.includes('SELL')&&!sig.sigName.includes('WEAK');
+
+  if(isBuyNow  && prev.sigName!==sig.sigName) {
+    const el2=el('botLastAction');
+    if(el2){el2.textContent='BUY';el2.className='bot-action buy';}
+    await executeBotOrder('buy', sig.sigName+' (score '+sig.score+')');
+  } else if(isSellNow && prev.sigName!==sig.sigName) {
+    const el2=el('botLastAction');
+    if(el2){el2.textContent='SELL';el2.className='bot-action sell';}
+    await executeBotOrder('sell', sig.sigName+' (score '+sig.score+')');
+  }
+}
+
+/* ════════════════════════════════════════
    FEAR & GREED INDEX
 ════════════════════════════════════════ */
 async function fetchFearGreed() {
@@ -2334,16 +2688,29 @@ function renderFearGreed(data) {
 ════════════════════════════════════════ */
 function exportCSV() {
   if(!S.paperTrades.length) { showToast('ยังไม่มีรายการ trade'); return; }
-  const hdr = ['วันที่เข้า','ฝั่ง','ราคาเข้า (USD)','ราคาออก (USD)','P&L %','สัญญาณ','สถานะ'];
-  const rows = S.paperTrades.map(t => [
-    new Date(t.entryTime).toLocaleString('th-TH'),
-    t.side.toUpperCase(),
-    t.entryPrice.toFixed(2),
-    t.exitPrice ? t.exitPrice.toFixed(2) : '',
-    t.pnlPct != null ? t.pnlPct.toFixed(2) : '',
-    t.signal,
-    t.status
-  ]);
+  const hdr = ['วันที่เข้า','เวลาเข้า','ทิศทาง','เหรียญ','ราคาเข้า (USD)','ราคาออก (USD)','วันที่ออก','จำนวนเหรียญ','มูลค่า USD','P&L %','P&L USD','สัญญาณ','สถานะ'];
+  const rows = S.paperTrades.map(t => {
+    const sz = t.amount||S.tradeSize||1000;
+    const qty = t.coinQty!=null ? t.coinQty.toFixed(6) : (sz/t.entryPrice).toFixed(6);
+    const pnlUSD = t.pnlUSD!=null ? t.pnlUSD.toFixed(2) : (t.pnlPct!=null?(sz*t.pnlPct/100).toFixed(2):'');
+    const dIn  = new Date(t.entryTime);
+    const dOut = t.exitTime ? new Date(t.exitTime) : null;
+    return [
+      dIn.toLocaleDateString('th-TH'),
+      dIn.toLocaleTimeString('th-TH'),
+      t.side.toUpperCase(),
+      t.coin||'BTC',
+      t.entryPrice.toFixed(4),
+      t.exitPrice ? t.exitPrice.toFixed(4) : '',
+      dOut ? dOut.toLocaleString('th-TH') : '',
+      qty,
+      sz.toFixed(2),
+      t.pnlPct != null ? t.pnlPct.toFixed(4) : '',
+      pnlUSD,
+      t.signal,
+      t.status
+    ];
+  });
   const csv = '\ufeff' + [hdr, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})),
@@ -2543,6 +2910,7 @@ function el(id){ return document.getElementById(id); }
 window.addEventListener('load', async ()=>{
   loadAlerts();
   loadPaper();
+  loadBotSettings();
   const savedToken=localStorage.getItem('investai_line_token');
   if(savedToken) document.getElementById('lineToken').value=savedToken;
   const savedInterval=localStorage.getItem('investai_refresh');
