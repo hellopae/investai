@@ -228,25 +228,89 @@ canvas#mainChart { display:block; width:100%; }
 .score-fill { height:100%; border-radius:2px; transition:width .5s; }
 
 /* ════════════════════════════════════════
-   PAPER TRADE SECTION
+   UNIFIED TRADING SECTION
 ════════════════════════════════════════ */
-.paper-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
-.ps-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; text-align:center; }
-.ps-label { font-size:.65rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; }
-.ps-val { font-family:var(--mono); font-size:1.55rem; font-weight:700; }
-.ps-val.g { color:var(--green); }
-.ps-val.r { color:var(--red); }
-.ps-val.b { color:var(--blueb); }
-.ps-sub { font-size:.72rem; color:var(--text2); margin-top:3px; }
-.trade-list { display:flex; flex-direction:column; gap:0; overflow-y:auto; max-height:520px; border:1px solid var(--border); border-radius:var(--rs); overflow:hidden; }
-.trade-th { display:grid; grid-template-columns:56px 54px 80px 90px 90px 80px 72px 72px 68px; gap:0; background:var(--bg2); border-bottom:1px solid var(--border); }
+/* Mode tabs */
+.tm-tabs { display:flex; gap:3px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:3px; }
+.tm-tab { padding:7px 20px; border-radius:7px; font-size:.82rem; font-weight:700; cursor:pointer; border:none; background:transparent; font-family:var(--font); transition:all .2s; color:var(--text2); }
+.tm-tab.active.test { background:linear-gradient(135deg,#1e3a8a,#3b82f6); color:#fff; box-shadow:0 0 14px rgba(59,130,246,.25); }
+.tm-tab.active.real { background:linear-gradient(135deg,#14532d,#22c55e); color:#fff; box-shadow:0 0 14px rgba(34,197,94,.25); }
+
+/* Portfolio grid */
+.tp-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+.tp-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; position:relative; overflow:hidden; }
+.tp-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.tp-card.usdt::before { background:linear-gradient(90deg,var(--blueb),transparent); }
+.tp-card.hold::before { background:linear-gradient(90deg,var(--btc),transparent); }
+.tp-card.total::before { background:linear-gradient(90deg,var(--green),transparent); }
+.tp-card.pnl::before { background:linear-gradient(90deg,var(--yellow),transparent); }
+.tp-label { font-size:.62rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.09em; margin-bottom:6px; }
+.tp-val { font-family:var(--mono); font-size:1.35rem; font-weight:700; line-height:1.2; }
+.tp-sub { font-family:var(--mono); font-size:.7rem; color:var(--text2); margin-top:4px; }
+
+/* Open position banner */
+.open-pos-card { background:var(--card); border:1px solid var(--bhi); border-radius:var(--r); padding:18px; margin-bottom:14px; display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; }
+.pos-tag { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--text2); margin-bottom:6px; }
+.pos-details { display:flex; gap:18px; flex-wrap:wrap; margin-top:8px; }
+.pos-d .l { font-size:.7rem; color:var(--text2); display:block; }
+.pos-d .v { font-family:var(--mono); font-size:.85rem; font-weight:700; }
+.pos-label { font-size:.68rem; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+.pos-val { font-family:var(--mono); font-size:.9rem; font-weight:700; color:var(--text); }
+.pos-pnl-big { font-family:var(--mono); font-size:2.2rem; font-weight:800; line-height:1; }
+.pos-pnl-usd { font-family:var(--mono); font-size:.85rem; color:var(--text2); margin-top:4px; margin-bottom:14px; }
+.pos-close-btn { background:var(--rd); border:1px solid rgba(239,68,68,.4); color:var(--red); border-radius:var(--rs); padding:10px 22px; font-size:.85rem; font-weight:800; cursor:pointer; font-family:var(--font); transition:all .2s; }
+.pos-close-btn:hover { background:var(--red); color:#fff; }
+
+/* Trade + Bot panel */
+.trade-bot-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.trade-input-wrap { display:flex; flex-direction:column; gap:10px; }
+.tr-amount { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--mono); font-size:1.1rem; font-weight:700; padding:10px 14px; outline:none; transition:border-color .2s; }
+.tr-amount:focus { border-color:var(--blueb); }
+.tr-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tr-buy  { background:rgba(34,197,94,.12); border:2px solid rgba(34,197,94,.4); color:var(--green); border-radius:var(--rs); padding:13px; font-size:.92rem; font-weight:800; cursor:pointer; font-family:var(--font); transition:all .2s; }
+.tr-buy:hover:not(:disabled)  { background:var(--green); color:#000; border-color:var(--green); }
+.tr-sell { background:rgba(239,68,68,.12); border:2px solid rgba(239,68,68,.4); color:var(--red); border-radius:var(--rs); padding:13px; font-size:.92rem; font-weight:800; cursor:pointer; font-family:var(--font); transition:all .2s; }
+.tr-sell:hover:not(:disabled) { background:var(--red); color:#fff; border-color:var(--red); }
+.tr-buy:disabled,.tr-sell:disabled { opacity:.35; cursor:not-allowed; }
+.tr-secondary-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.tr-sec-btn { background:var(--bg2); border:1px solid var(--border); color:var(--text2); border-radius:var(--rs); padding:7px 14px; font-size:.75rem; font-weight:600; cursor:pointer; font-family:var(--font); transition:all .2s; }
+.tr-sec-btn:hover { border-color:var(--blueb); color:var(--blueb); }
+.tr-sec-btn.close { border-color:rgba(239,68,68,.3); color:var(--red); }
+.tr-sec-btn.close:hover { background:var(--rd); }
+.deposit-row { display:flex; gap:6px; flex-wrap:wrap; }
+.dep-btn { background:var(--bludim); border:1px solid rgba(59,130,246,.25); color:var(--blueb); border-radius:var(--rs); padding:5px 12px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:var(--mono); transition:all .15s; }
+.dep-btn:hover { background:rgba(59,130,246,.2); }
+
+/* Bot panel */
+.bot-sig-box { background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:12px 14px; margin-bottom:10px; }
+.bot-sig-tag { font-size:.6rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.1em; }
+.bot-sig-name { font-family:var(--mono); font-size:1.4rem; font-weight:800; line-height:1.2; }
+.bot-status-bar { display:flex; align-items:center; gap:8px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:8px 12px; }
+.bot-label { font-size:.8rem; font-weight:700; color:var(--text); }
+.bot-sub { font-size:.68rem; color:var(--text3); flex:1; }
+.bot-action { font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:4px; }
+.bot-action.buy  { background:rgba(34,197,94,.15); color:var(--green); }
+.bot-action.sell { background:rgba(239,68,68,.15); color:var(--red); }
+.bot-action.hold { background:rgba(234,179,8,.1); color:var(--yellow); }
+.bot-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; display:inline-block; }
+.bot-dot.on  { background:var(--green); box-shadow:0 0 7px rgba(34,197,94,.6); animation:pulse 2s infinite; }
+.bot-dot.off { background:var(--text3); }
+.bot-log-box { background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:8px 10px; font-family:var(--mono); font-size:.68rem; color:var(--text2); max-height:110px; overflow-y:auto; line-height:1.9; }
+
+/* API setup card */
+.api-setup-card { background:rgba(234,179,8,.05); border:1px solid rgba(234,179,8,.25); border-radius:var(--r); padding:16px; margin-bottom:14px; }
+.api-setup-card .card-title { color:var(--yellow); }
+
+/* Trade History table */
+.trade-list { display:flex; flex-direction:column; gap:0; overflow-y:auto; border:1px solid var(--border); border-radius:var(--rs); overflow:hidden; }
+.trade-th { display:grid; grid-template-columns:56px 54px 80px 90px 90px 80px 72px 72px 68px; background:var(--bg2); border-bottom:1px solid var(--border); }
 .trade-th-cell { font-size:.6rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; padding:7px 8px; }
-.trade-item { display:grid; grid-template-columns:56px 54px 80px 90px 90px 80px 72px 72px 68px; gap:0; padding:0; background:transparent; border:none; border-bottom:1px solid rgba(37,99,235,.07); transition:background .15s; }
+.trade-item { display:grid; grid-template-columns:56px 54px 80px 90px 90px 80px 72px 72px 68px; border-bottom:1px solid rgba(37,99,235,.07); transition:background .15s; }
 .trade-item:hover { background:var(--bludim); }
 .trade-item:last-child { border-bottom:none; }
 .trade-cell { font-family:var(--mono); font-size:.72rem; color:var(--text2); padding:9px 8px; display:flex; align-items:center; }
 .trade-cell.label { font-family:var(--font); font-size:.7rem; color:var(--text3); }
-.trade-side { font-size:.62rem; font-weight:800; padding:2px 7px; border-radius:3px; min-width:36px; text-align:center; display:inline-block; }
+.trade-side { font-size:.62rem; font-weight:800; padding:2px 7px; border-radius:3px; text-align:center; display:inline-block; }
 .trade-side.buy  { background:var(--gd); color:var(--green); }
 .trade-side.sell { background:var(--rd); color:var(--red); }
 .trade-pnl-pos { color:var(--green); font-weight:700; }
@@ -254,21 +318,14 @@ canvas#mainChart { display:block; width:100%; }
 .trade-status { font-size:.6rem; padding:2px 7px; border-radius:3px; font-weight:700; }
 .trade-status.open   { background:var(--bludim); color:var(--blueb); }
 .trade-status.closed { background:var(--bg); color:var(--text3); }
-/* ════════════════════════════════════════
-   BINANCE BOT
-════════════════════════════════════════ */
-.bot-status-bar { display:flex; align-items:center; gap:12px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--rs); padding:12px 16px; margin-bottom:14px; flex-wrap:wrap; }
-.bot-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.bot-dot.on  { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,.5); animation:pulse 2s infinite; }
-.bot-dot.off { background:var(--text3); }
-.bot-dot.warn{ background:var(--yellow); }
-.bot-label   { font-size:.78rem; font-weight:700; color:var(--text); }
-.bot-sub     { font-size:.7rem; color:var(--text2); flex:1; }
-.bot-action  { font-family:var(--mono); font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:4px; }
-.bot-action.buy  { background:var(--gd); color:var(--green); }
-.bot-action.sell { background:var(--rd); color:var(--red); }
-.bot-action.hold { background:var(--yd); color:var(--yellow); }
 .empty-trades { text-align:center; padding:32px; color:var(--text2); font-size:.85rem; }
+/* responsive */
+@media(max-width:900px) {
+  .tp-grid { grid-template-columns:repeat(2,1fr); }
+  .trade-bot-grid { grid-template-columns:1fr; }
+  .open-pos-card { grid-template-columns:1fr; text-align:center; }
+  .pos-details { justify-content:center; }
+}
 
 /* ════════════════════════════════════════
    SETTINGS SECTION
@@ -498,7 +555,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   <div class="nav-menu">
     <button class="nm active" onclick="goTo('s-chart',this)">📊 กราฟ</button>
     <button class="nm" onclick="goTo('s-signal',this)">🤖 AI Signal</button>
-    <button class="nm" onclick="goTo('s-paper',this)">📈 Paper Trade</button>
+    <button class="nm" onclick="goTo('s-paper',this)">💰 Trading</button>
     <button class="nm" onclick="goTo('s-settings',this)">⚙️ ตั้งค่า</button>
   </div>
   <div class="nav-r">
@@ -853,113 +910,164 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
 </section>
 
 <!-- ═══════════════════════════════
-     SECTION: PAPER TRADE
+     SECTION: TRADING (Test + Real)
 ═══════════════════════════════ -->
 <section id="s-paper">
+  <!-- Header -->
   <div class="sh">
-    <div class="st"><span class="ic">📈</span> AI Paper Trading</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span id="paperOpenCount" class="pill b">-- Open</span>
+    <div class="st"><span class="ic">💰</span> Trading</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="tm-tabs">
+        <button class="tm-tab active test" id="tmTabTest" onclick="setTradingMode('test')">🧪 Test</button>
+        <button class="tm-tab real" id="tmTabReal" onclick="setTradingMode('real')">💰 Real</button>
+      </div>
       <button onclick="exportCSV()" style="background:var(--gd);border:1px solid rgba(34,197,94,.3);color:var(--green);border-radius:var(--rs);padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:var(--font)">⬇ CSV</button>
       <button onclick="resetPaper()" style="background:var(--rd);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:var(--rs);padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:var(--font)">Reset</button>
     </div>
   </div>
 
-  <!-- Paper Trade Intro -->
-  <div class="page-intro" style="margin-bottom:12px">
-    <h3>📋 Paper Trading — ซื้อขายจำลอง ไม่ใช้เงินจริง</h3>
-    <p>เริ่มต้นด้วยเงินสมมติ <strong style="color:var(--btc)">$10,000</strong> แล้วให้ AI หรือตัวคุณเองทำการซื้อขาย BTC จำลอง เพื่อดูว่า <strong style="color:var(--blueb)">ถ้าลงทุนตามสัญญาณ AI จริงๆ ผลลัพธ์จะเป็นอย่างไร</strong> ก่อนนำเงินจริงไปเสี่ยง</p>
-    <div class="paper-steps">
-      <div class="paper-step">
-        <div class="paper-step-ico">🤖</div>
-        <div class="paper-step-txt">AI วิเคราะห์<br>5 ตัวชี้วัดพร้อมกัน</div>
+  <!-- Real Binance API Setup (shown only in Real mode) -->
+  <div id="realApiSetup" class="api-setup-card" style="display:none;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:1.1rem">🔑</span>
+      <div class="card-title" style="margin-bottom:0">Binance API Setup</div>
+      <span style="font-size:.7rem;color:var(--yellow);margin-left:auto">⚠️ เงินจริง — ระวังด้วย</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label class="form-label">API Key</label>
+        <input type="password" class="form-input" id="tr-apiKey" placeholder="Binance API Key...">
       </div>
-      <div class="paper-step">
-        <div class="paper-step-ico">⚡</div>
-        <div class="paper-step-txt">คะแนนรวม → สัญญาณ<br>BUY / HOLD / SELL</div>
+      <div>
+        <label class="form-label">API Secret</label>
+        <input type="password" class="form-input" id="tr-apiSecret" placeholder="Binance API Secret...">
       </div>
-      <div class="paper-step">
-        <div class="paper-step-ico">📝</div>
-        <div class="paper-step-txt">บันทึกซื้อขาย<br>อัตโนมัติ (Auto)</div>
-      </div>
-      <div class="paper-step">
-        <div class="paper-step-ico">📊</div>
-        <div class="paper-step-txt">วัด Win Rate<br>และผลตอบแทน</div>
-      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn-primary" onclick="saveRealApiSettings()" style="max-width:160px">💾 บันทึก API</button>
+      <button onclick="testBotPing()" style="background:var(--bludim);border:1px solid var(--border);color:var(--blueb);border-radius:var(--rs);padding:8px 14px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--font)">📡 ทดสอบ Connection</button>
+      <button onclick="fetchRealBalance()" style="background:var(--bludim);border:1px solid var(--border);color:var(--blueb);border-radius:var(--rs);padding:8px 14px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--font)">🔄 โหลด Balance</button>
+    </div>
+    <div class="info-box" style="font-size:.72rem">
+      <strong>🔑 สร้าง Binance API:</strong> binance.com → Account → API Management → สร้าง Key → เปิด "Spot Trading" เท่านั้น<br>
+      <span style="color:var(--yellow)">⚠️ CORS: browser ถูก block — ต้องใช้ CORS proxy ที่รันบนเครื่องตัวเอง</span>
     </div>
   </div>
 
-  <!-- AI Calculation Explainer -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title" style="margin-bottom:8px">🤖 AI คำนวณอะไร และแนะนำให้ทำอะไร?</div>
-    <p style="font-size:.78rem;color:var(--text2);line-height:1.65">AI รวม <strong style="color:var(--text)">5 ตัวชี้วัด</strong> เป็นคะแนน (-13 ถึง +13) แล้วแปลงเป็นสัญญาณ และตัดสินใจ paper trade ตามกฎด้านล่าง</p>
-    <div class="ai-calc-grid">
-      <div class="ai-calc-item">
-        <div class="ai-calc-name">📉 RSI (14) — Momentum</div>
-        <div class="ai-calc-body">วัดว่าราคาถูกซื้อหรือขายมากเกินไปหรือเปล่า<br><span style="color:var(--green)">RSI &lt; 30 → ซื้อเกินไปมาก → ควร BUY</span><br><span style="color:var(--red)">RSI &gt; 70 → ซื้อเกินไปมาก → ควร SELL</span></div>
-      </div>
-      <div class="ai-calc-item">
-        <div class="ai-calc-name">📈 MACD (12,26,9) — Crossover</div>
-        <div class="ai-calc-body">วัด momentum จากเส้นค่าเฉลี่ย 2 เส้น<br><span style="color:var(--green)">Histogram ตัดขึ้น → BUY signal</span><br><span style="color:var(--red)">Histogram ตัดลง → SELL signal</span></div>
-      </div>
-      <div class="ai-calc-item">
-        <div class="ai-calc-name">🎯 Bollinger Bands — Range</div>
-        <div class="ai-calc-body">วัดว่าราคาอยู่ตรงไหนของช่วงราคาปกติ<br><span style="color:var(--green)">ต่ำกว่าเส้นล่าง → ราคาถูกเกินไป → BUY</span><br><span style="color:var(--red)">สูงกว่าเส้นบน → ราคาแพงเกินไป → SELL</span></div>
-      </div>
-      <div class="ai-calc-item">
-        <div class="ai-calc-name">📊 Moving Average — Trend</div>
-        <div class="ai-calc-body">เทรนด์ระยะกลางจาก MA20 และ MA50<br><span style="color:var(--green)">MA20 &gt; MA50 → Golden Cross → BUY</span><br><span style="color:var(--red)">MA20 &lt; MA50 → Death Cross → SELL</span></div>
-      </div>
-      <div class="ai-calc-item">
-        <div class="ai-calc-name">⚡ Trend Strength — 5 แท่ง</div>
-        <div class="ai-calc-body">ดูการเคลื่อนไหวราคาใน 5 แท่งล่าสุด<br><span style="color:var(--green)">+3% ขึ้นไป → momentum ขาขึ้น</span><br><span style="color:var(--red)">-3% ลงไป → momentum ขาลง</span></div>
-      </div>
+  <!-- Portfolio Grid (4 cards) -->
+  <div class="tp-grid">
+    <div class="tp-card usdt">
+      <div class="tp-label">💵 USDT Balance</div>
+      <div class="tp-val" id="tp-usdt-val">$10,000</div>
+      <div class="tp-sub" id="tp-usdt-sub">เงินสด</div>
     </div>
-    <div class="ai-auto-rule">
-      <strong style="color:var(--text)">🔄 กฎ Auto-Trade:</strong> ระบบจะเปิด position ใหม่เมื่อ signal เป็น <strong style="color:var(--green)">BUY</strong> หรือ <strong style="color:var(--green)">STRONG BUY</strong> (score ≥ +4) และจะเปิด Short เมื่อเป็น <strong style="color:var(--red)">SELL</strong> หรือ <strong style="color:var(--red)">STRONG SELL</strong> (score ≤ -4) · สัญญาณ <span style="color:var(--yellow)">WEAK / HOLD</span> จะไม่เปิด position ใหม่ แต่จะรอยืนยัน · ถ้าอยากทดสอบทันที ใช้ปุ่ม Manual ด้านล่าง
+    <div class="tp-card hold">
+      <div class="tp-label" id="tp-coin-label">🪙 Holding</div>
+      <div class="tp-val" id="tp-coin-val">$0</div>
+      <div class="tp-sub" id="tp-coin-sub">0.00000 BTC</div>
+    </div>
+    <div class="tp-card total">
+      <div class="tp-label">📊 Portfolio</div>
+      <div class="tp-val" id="tp-total-val">$10,000</div>
+      <div class="tp-sub" id="tp-total-sub">ยอดรวมทั้งหมด</div>
+    </div>
+    <div class="tp-card pnl">
+      <div class="tp-label">📈 P&L</div>
+      <div class="tp-val" id="tp-pnl-val" style="color:var(--text2)">$0</div>
+      <div class="tp-sub" id="tp-pnl-sub">0.00%</div>
     </div>
   </div>
 
-  <!-- Manual Trade Panel -->
-  <div class="manual-panel">
-    <div class="card-title" style="margin-bottom:4px">🎮 เปิด Position ด้วยตนเอง (Manual Trade)</div>
-    <p style="font-size:.74rem;color:var(--text2);margin-bottom:2px">ราคาเข้า = ราคา BTC ปัจจุบัน · ราคาออก = ราคา BTC ตอนที่คุณกด <em>ปิด Position</em></p>
-    <div class="mt-btns">
-      <button class="mt-buy" id="btn-manual-buy" onclick="manualTrade('buy')">🟢 เปิด BUY</button>
-      <button class="mt-sell" id="btn-manual-sell" onclick="manualTrade('sell')">🔴 เปิด SELL</button>
-      <button class="mt-close" id="btn-manual-close" onclick="closeOpenTrade()" disabled>❌ ปิด Position</button>
-      <span style="font-size:.75rem;color:var(--text2);margin-left:auto" id="mt-status">ราคาปัจจุบัน: <span class="btc" style="font-family:var(--mono);color:var(--btc);font-weight:700" id="mt-price">--</span></span>
+  <!-- Open Position Card (hidden when no position) -->
+  <div id="openPosCard" class="open-pos-card" style="display:none">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span class="trade-side buy" id="pos-side-badge">LONG</span>
+        <span style="font-family:var(--mono);font-weight:700;font-size:.95rem" id="pos-coin-label">BTC/USD</span>
+        <span style="font-size:.72rem;color:var(--text3)">Open Position</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,auto);gap:0 24px">
+        <div><div class="pos-label">ราคาเข้า</div><div class="pos-val" id="pos-entry">--</div></div>
+        <div><div class="pos-label">ราคาปัจจุบัน</div><div class="pos-val" id="pos-current">--</div></div>
+        <div><div class="pos-label">จำนวน</div><div class="pos-val" id="pos-qty">--</div></div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <div class="pos-label" style="margin-bottom:6px">Unrealized P&L</div>
+      <div class="pos-pnl-big" id="pos-pnl-big">--</div>
+      <div style="font-size:.78rem;color:var(--text2);margin:6px 0 12px" id="pos-pnl-usd">--</div>
+      <button class="pos-close-btn" onclick="closePosNow()">✕ ปิด Position</button>
     </div>
   </div>
 
-  <div class="paper-stats">
-    <div class="ps-card"><div class="ps-label">Win Rate</div><div class="ps-val g" id="ps-wr">--%</div><div class="ps-sub" id="ps-wrsub">-- trades</div></div>
-    <div class="ps-card"><div class="ps-label">Total Return</div><div class="ps-val g" id="ps-ret">--</div><div class="ps-sub">เริ่มต้น $10,000</div></div>
-    <div class="ps-card"><div class="ps-label">Portfolio Value</div><div class="ps-val b" id="ps-val">$10,000</div><div class="ps-sub" id="ps-vsub">0 trades</div></div>
-    <div class="ps-card"><div class="ps-label">Unrealized P&L</div><div class="ps-val" id="ps-unrealized">--</div><div class="ps-sub" id="ps-usub">open position</div></div>
-  </div>
-  <!-- Position Size Setting -->
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-    <span style="font-size:.75rem;color:var(--text2)">💰 ขนาด Position จำลอง:</span>
-    <select class="form-input" id="tradeSizeSelect" onchange="S.tradeSize=parseInt(this.value)" style="width:auto;padding:4px 10px;font-size:.76rem">
-      <option value="100">$100</option>
-      <option value="500">$500</option>
-      <option value="1000" selected>$1,000</option>
-      <option value="5000">$5,000</option>
-      <option value="10000">$10,000</option>
-    </select>
-    <span style="font-size:.72rem;color:var(--text3)">ใช้กับทุก trade ใหม่ที่เปิด</span>
-  </div>
+  <!-- Trade + Bot Grid -->
+  <div class="trade-bot-grid">
 
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title" style="margin-bottom:14px">Portfolio Performance</div>
-    <canvas id="perfChart" height="180"></canvas>
-  </div>
+    <!-- Manual Trade Panel -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">🎮 Trade Manual</div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:.72rem;color:var(--text3);margin-bottom:4px">ราคาปัจจุบัน</div>
+        <div style="font-family:var(--mono);font-size:1.25rem;font-weight:800;color:var(--btc)" id="tr-curr-price">--</div>
+      </div>
+      <label class="form-label">จำนวน USDT</label>
+      <input type="number" class="form-input tr-amount" id="tr-amount" value="100" min="1" step="10" oninput="updateQtyPreview()">
+      <div style="font-size:.72rem;color:var(--text2);margin:6px 0 14px" id="tr-qty-preview">≈ 0.00000 BTC</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <button class="tr-buy" id="tr-buy-btn" onclick="executeTrade('buy')">🟢 BUY</button>
+        <button class="tr-sell" id="tr-sell-btn" onclick="executeTrade('sell')">🔴 SELL</button>
+      </div>
+      <!-- Deposit Panel (Test mode only) -->
+      <div id="depositPanel" style="padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px">💳 เติมเงิน (Test Mode)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="dep-btn" onclick="deposit(1000)">+$1k</button>
+          <button class="dep-btn" onclick="deposit(5000)">+$5k</button>
+          <button class="dep-btn" onclick="deposit(10000)">+$10k</button>
+        </div>
+      </div>
+    </div>
 
+    <!-- AI Bot Panel -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">🤖 AI Auto-Bot</div>
+        <label class="toggle" style="flex-shrink:0">
+          <input type="checkbox" id="botToggle2" onchange="toggleBot2(this)">
+          <span class="toggle-s"></span>
+        </label>
+      </div>
+      <!-- Bot Status Bar -->
+      <div class="bot-status-bar" id="botStatusBar2" style="margin-bottom:12px">
+        <div class="bot-dot off" id="botDot2"></div>
+        <span class="bot-label" id="botLabel2">Bot: ปิดอยู่</span>
+        <span class="bot-sub" id="botSub2">เปิด toggle เพื่อเริ่ม</span>
+        <span class="bot-action hold" id="bot-last-action2">--</span>
+      </div>
+      <!-- Current Signal Display -->
+      <div class="bot-sig-box" style="margin-bottom:12px">
+        <div style="font-size:.7rem;color:var(--text3);margin-bottom:6px">AI Signal ปัจจุบัน</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="bot-sig-name" id="bot-sig-name2">--</div>
+          <div style="font-size:.72rem;color:var(--text2)">Score: <span style="font-family:var(--mono);font-weight:700" id="bot-sig-score2">--</span></div>
+        </div>
+        <div style="font-size:.7rem;color:var(--text3);margin-top:5px" id="bot-last-action-desc2">รอสัญญาณ AI...</div>
+      </div>
+      <!-- Order size -->
+      <label class="form-label">Order Size (USDT per trade)</label>
+      <input type="number" class="form-input" id="tr-bot-size" value="100" min="10" step="10" style="margin-bottom:12px">
+      <!-- Bot Log -->
+      <div style="font-size:.68rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Activity Log</div>
+      <div class="bot-log-box" id="botLog2"><span style="color:var(--text3)">-- รอการทำงาน --</span></div>
+    </div>
+
+  </div><!-- /trade-bot-grid -->
+
+  <!-- Trade History -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="card-title" style="margin-bottom:0">📋 Trade History</div>
-      <span style="font-size:.72rem;color:var(--text2)">แสดงล่าสุด 30 รายการ</span>
+      <span style="font-size:.72rem;color:var(--text2)" id="paperOpenCount">0 Open</span>
     </div>
     <div class="trade-list" id="tradeList" style="max-height:460px;overflow-x:auto">
       <div class="empty-trades" style="padding:20px;text-align:center;color:var(--text3)">ยังไม่มีรายการ รอสัญญาณ AI...</div>
@@ -1040,62 +1148,6 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
     </div>
   </div>
 
-  <!-- Binance Bot -->
-  <div class="card" style="margin-top:14px">
-    <div class="card-title" style="margin-bottom:4px">🤖 Binance Auto-Trading Bot</div>
-    <p style="font-size:.73rem;color:var(--text2);margin-bottom:14px;line-height:1.6">Bot จะส่งคำสั่ง Order อัตโนมัติเมื่อ AI Signal เปลี่ยน · แนะนำเริ่มด้วย <strong style="color:var(--yellow)">Testnet</strong> ก่อนเสมอ</p>
-
-    <!-- Bot status bar -->
-    <div class="bot-status-bar" id="botStatusBar">
-      <div class="bot-dot off" id="botDot"></div>
-      <span class="bot-label" id="botLabel">Bot: ปิดอยู่</span>
-      <span class="bot-sub" id="botSub">กรอก API Key แล้วเปิด Bot</span>
-      <span class="bot-action hold" id="botLastAction">--</span>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-      <div>
-        <label class="form-label">Binance API Key</label>
-        <input type="password" class="form-input" id="bnApiKey" placeholder="API Key...">
-      </div>
-      <div>
-        <label class="form-label">Binance API Secret</label>
-        <input type="password" class="form-input" id="bnApiSecret" placeholder="API Secret...">
-      </div>
-      <div>
-        <label class="form-label">Order Size (USDT per trade)</label>
-        <input type="number" class="form-input" id="bnOrderSize" value="100" min="10" step="10">
-      </div>
-      <div>
-        <label class="form-label">Mode</label>
-        <select class="form-input" id="bnTestnet">
-          <option value="1">🧪 Testnet (testnet.binance.vision) — ปลอดภัย</option>
-          <option value="0">⚠️ Real Binance (api.binance.com) — เงินจริง!</option>
-        </select>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="btn-primary" onclick="saveBotSettings()" style="max-width:160px">💾 บันทึก Bot Config</button>
-      <button id="botToggleBtn" onclick="toggleBot()" style="background:var(--gd);border:1px solid rgba(34,197,94,.3);color:var(--green);border-radius:var(--rs);padding:8px 18px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--font)">▶ เปิด Bot</button>
-      <button onclick="testBotPing()" style="background:var(--bludim);border:1px solid var(--border);color:var(--blueb);border-radius:var(--rs);padding:8px 14px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--font)">📡 ทดสอบ Connection</button>
-    </div>
-
-    <div class="info-box" style="margin-bottom:12px">
-      <strong>🔑 วิธีสร้าง Binance Testnet API Key:</strong><br>
-      1. ไปที่ <strong>testnet.binance.vision</strong> → Login ด้วย GitHub<br>
-      2. "Generate HMAC_SHA256 Key" → Copy API Key + Secret<br>
-      3. วางด้านบน → กด บันทึก → กด เปิด Bot<br>
-      <span style="color:var(--yellow)">⚠️ สำหรับ Real Binance: เปิด "Enable Spot & Margin Trading" ใน API settings</span>
-    </div>
-
-    <!-- Bot log -->
-    <div style="font-size:.68rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Bot Activity Log</div>
-    <div id="botLog" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px;font-family:var(--mono);font-size:.7rem;color:var(--text2);max-height:140px;overflow-y:auto;line-height:1.8">
-      <span style="color:var(--text3)">-- รอการทำงาน --</span>
-    </div>
-  </div>
-
   <!-- Data Settings -->
   <div class="card" style="margin-top:14px">
     <div class="card-title" style="margin-bottom:14px">🔄 การตั้งค่าข้อมูล</div>
@@ -1146,7 +1198,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
       <span class="bn-ico">🤖</span><span>AI Signal</span>
     </button>
     <button class="bn-btn" id="bn-s-paper" onclick="goTo('s-paper',this)">
-      <span class="bn-ico">📈</span><span>Paper</span>
+      <span class="bn-ico">💰</span><span>Trading</span>
     </button>
     <button class="bn-btn" id="bn-s-settings" onclick="goTo('s-settings',this)">
       <span class="bn-ico">⚙️</span><span>ตั้งค่า</span>
@@ -1180,6 +1232,10 @@ const S = {
   fearGreed: null,
   chatReady: false,
   tradeSize: 1000,   // virtual USD per trade
+  trMode: 'test',        // 'test' | 'real'
+  testUSDT: 10000,       // virtual cash balance
+  testHoldings: {},      // { 'BTC': qty, ... }
+  testDeposited: 10000,  // total deposited for P&L base
   bot: {
     enabled: false,
     apiKey: '',
@@ -1999,79 +2055,346 @@ function drawCandles() {
 function loadPaper() {
   try { S.paperTrades=JSON.parse(localStorage.getItem('investai_trades')||'[]'); } catch(e){ S.paperTrades=[]; }
   try { S.perfHistory=JSON.parse(localStorage.getItem('investai_perf')||'[]'); } catch(e){ S.perfHistory=[]; }
+  try {
+    const w=JSON.parse(localStorage.getItem('investai_wallet')||'{}');
+    if(w.testUSDT!=null) S.testUSDT=w.testUSDT;
+    if(w.testHoldings) S.testHoldings=w.testHoldings;
+    if(w.testDeposited!=null) S.testDeposited=w.testDeposited;
+  } catch(e){}
 }
 function savePaper() {
   localStorage.setItem('investai_trades',JSON.stringify(S.paperTrades));
   localStorage.setItem('investai_perf',JSON.stringify(S.perfHistory));
+  localStorage.setItem('investai_wallet',JSON.stringify({
+    testUSDT:S.testUSDT, testHoldings:S.testHoldings, testDeposited:S.testDeposited
+  }));
 }
 
-function manualTrade(side) {
+/* ── Unified Trade Execution ── */
+function executeTrade(side) {
   if(!S.currentPrice) { showToast('รอราคาโหลดก่อน'); return; }
   const openTrade = S.paperTrades.find(t=>t.status==='open');
-  if(openTrade) { showToast('⚠️ มี position เปิดอยู่แล้ว — กด "ปิด Position" ก่อน'); return; }
-  const sz = S.tradeSize||1000;
-  S.paperTrades.push({
-    id: Date.now(), side,
-    coin: S.coin, coinQty: sz/S.currentPrice, amount: sz,
-    entryPrice: S.currentPrice, entryTime: Date.now(),
-    signal: 'MANUAL', status: 'open',
-    exitPrice: null, exitTime: null, pnlPct: null, pnlUSD: null,
-  });
-  savePaper(); renderPaper();
-  showToast(`✅ เปิด ${side.toUpperCase()} @ ${fmtPrice(S.currentPrice)} | ขนาด $${sz.toLocaleString()}`);
+
+  if(S.trMode==='real') {
+    // Real Binance mode
+    if(!S.bot.apiKey||!S.bot.apiSecret) {
+      showToast('กรุณากรอก API Key ใน Real mode ก่อน'); return;
+    }
+    const orderSize = parseFloat(document.getElementById('tr-bot-size')?.value)||100;
+    S.bot.orderSizeUSD = orderSize;
+    executeBotOrder(side, 'Manual Trade');
+    return;
+  }
+
+  // Test mode — simulate wallet
+  if(openTrade && openTrade.side===side) {
+    showToast('⚠️ มี '+side.toUpperCase()+' position เปิดอยู่แล้ว'); return;
+  }
+
+  const amount = parseFloat(document.getElementById('tr-amount')?.value)||100;
+
+  if(side==='buy') {
+    if(S.testUSDT < amount) { showToast('USDT ไม่พอ — เติมเงินก่อน'); return; }
+    const qty = amount / S.currentPrice;
+    S.testUSDT -= amount;
+    S.testHoldings[S.coin] = (S.testHoldings[S.coin]||0) + qty;
+    S.paperTrades.push({
+      id:Date.now(), side:'buy', coin:S.coin, coinQty:qty, amount,
+      entryPrice:S.currentPrice, entryTime:Date.now(),
+      signal:'MANUAL', status:'open',
+      exitPrice:null, exitTime:null, pnlPct:null, pnlUSD:null,
+    });
+    savePaper(); renderPaper();
+    showToast(`✅ BUY ${qty.toFixed(5)} ${S.coin} @ ${fmtPrice(S.currentPrice)}`);
+  } else {
+    const holdQty = S.testHoldings[S.coin]||0;
+    if(holdQty<=0 && !openTrade) {
+      // Short sell — use amount from input as notional
+      if(S.testUSDT < amount) { showToast('USDT ไม่พอสำหรับ Short'); return; }
+      const qty = amount / S.currentPrice;
+      S.testHoldings[S.coin] = (S.testHoldings[S.coin]||0) - qty;
+      S.paperTrades.push({
+        id:Date.now(), side:'sell', coin:S.coin, coinQty:qty, amount,
+        entryPrice:S.currentPrice, entryTime:Date.now(),
+        signal:'MANUAL', status:'open',
+        exitPrice:null, exitTime:null, pnlPct:null, pnlUSD:null,
+      });
+      savePaper(); renderPaper();
+      showToast(`✅ SHORT ${qty.toFixed(5)} ${S.coin} @ ${fmtPrice(S.currentPrice)}`);
+    } else if(holdQty>0) {
+      // Close long by selling holdings
+      const sellValue = holdQty * S.currentPrice;
+      S.testUSDT += sellValue;
+      S.testHoldings[S.coin] = 0;
+      // Close all open buy trades
+      S.paperTrades.filter(t=>t.status==='open'&&t.coin===S.coin&&t.side==='buy').forEach(t=>{
+        t.status='closed'; t.exitPrice=S.currentPrice; t.exitTime=Date.now();
+        const p=(S.currentPrice-t.entryPrice)/t.entryPrice*100;
+        t.pnlPct=p; t.pnlUSD=t.amount*p/100;
+        const sv=S.perfHistory.length?S.perfHistory[S.perfHistory.length-1].val:10000;
+        S.perfHistory.push({t:Date.now(),val:sv*(1+p/100),pnl:p});
+      });
+      savePaper(); renderPaper();
+      showToast(`✅ SELL ${holdQty.toFixed(5)} ${S.coin} → $${sellValue.toFixed(2)}`);
+    } else {
+      showToast('ไม่มี position ที่จะ SELL');
+    }
+  }
 }
 
-function closeOpenTrade() {
+function closePosNow() {
   if(!S.currentPrice) return;
   const openTrade = S.paperTrades.find(t=>t.status==='open');
   if(!openTrade) { showToast('ไม่มี position เปิดอยู่'); return; }
-  openTrade.status = 'closed';
-  openTrade.exitPrice = S.currentPrice;
-  openTrade.exitTime = Date.now();
-  const pnlPct = openTrade.side==='buy'
-    ? (S.currentPrice - openTrade.entryPrice) / openTrade.entryPrice * 100
-    : (openTrade.entryPrice - S.currentPrice) / openTrade.entryPrice * 100;
-  openTrade.pnlPct = pnlPct;
-  openTrade.pnlUSD = (openTrade.amount||S.tradeSize||1000) * pnlPct/100;
-  const startVal = S.perfHistory.length ? S.perfHistory[S.perfHistory.length-1].val : 10000;
-  S.perfHistory.push({t: Date.now(), val: startVal*(1+pnlPct/100), pnl: pnlPct});
-  savePaper(); renderPaper();
-  showToast(`${pnlPct>=0?'✅ กำไร':'❌ ขาดทุน'} ${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}% (${pnlPct>=0?'+':''}$${Math.abs(openTrade.pnlUSD||0).toFixed(2)})`);
 
+  openTrade.status='closed';
+  openTrade.exitPrice=S.currentPrice;
+  openTrade.exitTime=Date.now();
+  const pnlPct = openTrade.side==='buy'
+    ? (S.currentPrice-openTrade.entryPrice)/openTrade.entryPrice*100
+    : (openTrade.entryPrice-S.currentPrice)/openTrade.entryPrice*100;
+  openTrade.pnlPct=pnlPct;
+  openTrade.pnlUSD=openTrade.amount*pnlPct/100;
+
+  // Update wallet (return notional + PnL)
+  if(openTrade.side==='buy') {
+    S.testHoldings[openTrade.coin]=(S.testHoldings[openTrade.coin]||0)-openTrade.coinQty;
+    if(S.testHoldings[openTrade.coin]<0) S.testHoldings[openTrade.coin]=0;
+    S.testUSDT += openTrade.coinQty*S.currentPrice;
+  } else {
+    S.testHoldings[openTrade.coin]=(S.testHoldings[openTrade.coin]||0)+openTrade.coinQty;
+    S.testUSDT += openTrade.amount - openTrade.pnlUSD;
+  }
+
+  const sv=S.perfHistory.length?S.perfHistory[S.perfHistory.length-1].val:S.testDeposited;
+  S.perfHistory.push({t:Date.now(),val:sv*(1+pnlPct/100),pnl:pnlPct});
+  savePaper(); renderPaper();
+  showToast(`${pnlPct>=0?'✅':'❌'} ปิด ${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}% ($${(openTrade.pnlUSD||0).toFixed(2)})`);
+}
+
+// Legacy wrapper (still used by processPaperTrade auto-close)
+function closeOpenTrade() { closePosNow(); }
+
+// Legacy wrapper for backward compatibility
+function manualTrade(side) { executeTrade(side); }
+
+function deposit(amount) {
+  if(S.trMode==='real') { showToast('ฝากได้เฉพาะ Test Mode'); return; }
+  S.testUSDT += amount;
+  S.testDeposited += amount;
+  savePaper(); updatePortfolio();
+  showToast(`✅ เติม $${amount.toLocaleString()} — ยอดรวม $${S.testUSDT.toFixed(0)}`);
+}
+
+function updateQtyPreview() {
+  const amt = parseFloat(document.getElementById('tr-amount')?.value)||0;
+  const qty = S.currentPrice ? (amt/S.currentPrice) : 0;
+  const coin = S.coin||'BTC';
+  const el2 = document.getElementById('tr-qty-preview');
+  if(el2) el2.textContent = `≈ ${qty.toFixed(6)} ${coin}`;
+}
+
+function updatePortfolio() {
+  if(!S.currentPrice) return;
+  const coin = S.coin||'BTC';
+  const holdQty = S.testHoldings[coin]||0;
+  const holdVal = holdQty * S.currentPrice;
+  const totalVal = S.testUSDT + holdVal;
+  const pnlUSD = totalVal - S.testDeposited;
+  const pnlPct = S.testDeposited>0 ? (pnlUSD/S.testDeposited*100) : 0;
+
+  const set = (id,v) => { const e=el(id); if(e) e.textContent=v; };
+  const setCol = (id,col) => { const e=el(id); if(e) e.style.color=col; };
+
+  // Portfolio cards
+  set('tp-usdt-val', '$'+S.testUSDT.toFixed(2));
+  set('tp-usdt-sub', S.trMode==='test'?'Test Wallet':'Binance USDT');
+  set('tp-coin-label', '🪙 '+coin+' Holding');
+  set('tp-coin-val', '$'+holdVal.toFixed(2));
+  set('tp-coin-sub', holdQty.toFixed(6)+' '+coin);
+  set('tp-total-val', '$'+totalVal.toFixed(2));
+  set('tp-total-sub', 'Deposited: $'+S.testDeposited.toLocaleString());
+  set('tp-pnl-val', (pnlUSD>=0?'+':'')+'$'+pnlUSD.toFixed(2));
+  set('tp-pnl-sub', (pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'%');
+  setCol('tp-pnl-val', pnlUSD>=0?'var(--green)':pnlUSD<0?'var(--red)':'var(--text2)');
+
+  // Current price in trade panel
+  set('tr-curr-price', fmtPrice(S.currentPrice));
+  updateQtyPreview();
+
+  // Open position card
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+  const posCard = document.getElementById('openPosCard');
+  if(posCard) {
+    if(openTrade) {
+      posCard.style.display='grid';
+      const livePnlPct = openTrade.side==='buy'
+        ? (S.currentPrice-openTrade.entryPrice)/openTrade.entryPrice*100
+        : (openTrade.entryPrice-S.currentPrice)/openTrade.entryPrice*100;
+      const livePnlUSD = openTrade.amount*livePnlPct/100;
+      const sideBadge = document.getElementById('pos-side-badge');
+      if(sideBadge){sideBadge.textContent=openTrade.side==='buy'?'LONG':'SHORT';sideBadge.className='trade-side '+(openTrade.side==='buy'?'buy':'sell');}
+      set('pos-coin-label', openTrade.coin+'/USD');
+      set('pos-entry', fmtPrice(openTrade.entryPrice));
+      set('pos-current', fmtPrice(S.currentPrice));
+      set('pos-qty', openTrade.coinQty.toFixed(6)+' '+openTrade.coin);
+      set('pos-pnl-big', (livePnlPct>=0?'+':'')+livePnlPct.toFixed(2)+'%');
+      setCol('pos-pnl-big', livePnlPct>=0?'var(--green)':'var(--red)');
+      set('pos-pnl-usd', (livePnlUSD>=0?'+':'')+'$'+livePnlUSD.toFixed(2));
+    } else {
+      posCard.style.display='none';
+    }
+  }
+  // BUY/SELL button states
+  const trBuy = document.getElementById('tr-buy-btn');
+  const trSell = document.getElementById('tr-sell-btn');
+  if(openTrade && trBuy) trBuy.disabled = openTrade.side==='buy';
+  if(openTrade && trSell) trSell.disabled = openTrade.side==='sell';
+  if(!openTrade) { if(trBuy)trBuy.disabled=false; if(trSell)trSell.disabled=false; }
+}
+
+async function fetchRealBalance() {
+  if(!S.bot.apiKey||!S.bot.apiSecret) {
+    showToast('กรุณากรอก API Key ก่อน'); return;
+  }
+  botLog2('🔄 กำลังโหลด Balance จาก Binance...');
+  try {
+    const data = await binanceRequest('GET','/api/v3/account',{});
+    const usdt = data.balances?.find(b=>b.asset==='USDT');
+    const coin = data.balances?.find(b=>b.asset===S.coin);
+    if(usdt) { S.testUSDT=parseFloat(usdt.free||0); el('tp-usdt-val').textContent='$'+S.testUSDT.toFixed(2); }
+    if(coin) { S.testHoldings[S.coin]=parseFloat(coin.free||0); }
+    updatePortfolio();
+    botLog2('✅ Balance โหลดแล้ว: USDT=$'+S.testUSDT.toFixed(2));
+    showToast('โหลด Balance สำเร็จ ✓');
+  } catch(e) {
+    botLog2('❌ โหลดไม่ได้: '+e.message);
+    showToast('CORS blocked — ต้องใช้ proxy');
+  }
+}
+
+function saveRealApiSettings() {
+  const key = document.getElementById('tr-apiKey')?.value.trim()||'';
+  const sec = document.getElementById('tr-apiSecret')?.value.trim()||'';
+  const sz  = parseFloat(document.getElementById('tr-bot-size')?.value)||100;
+  if(!key||!sec) { showToast('กรุณากรอก API Key และ Secret'); return; }
+  S.bot.apiKey=key; S.bot.apiSecret=sec; S.bot.orderSizeUSD=sz;
+  S.bot.testnet=false; // Real Binance when in real mode
+  localStorage.setItem('investai_bot_cfg',JSON.stringify({apiKey:key,apiSecret:sec,orderSizeUSD:sz,testnet:false}));
+  updateBotUI2();
+  showToast('บันทึก API Settings แล้ว ✓');
+  botLog2('💾 API saved — Real Binance mode');
+}
+
+function setTradingMode(mode) {
+  S.trMode=mode;
+  // Update tab styles
+  const tTest=document.getElementById('tmTabTest'), tReal=document.getElementById('tmTabReal');
+  if(tTest){ tTest.className='tm-tab '+(mode==='test'?'active test':''); }
+  if(tReal){ tReal.className='tm-tab '+(mode==='real'?'active real':''); }
+  // Show/hide API setup card
+  const apiCard=document.getElementById('realApiSetup');
+  if(apiCard) apiCard.style.display=mode==='real'?'block':'none';
+  // Show/hide deposit panel
+  const dep=document.getElementById('depositPanel');
+  if(dep) dep.style.display=mode==='test'?'block':'none';
+  // Update bot testnet flag
+  S.bot.testnet=(mode==='test');
+  updatePortfolio();
+  botLog2(mode==='test'?'🧪 สลับเป็น Test Mode':'💰 สลับเป็น Real Binance Mode');
+  showToast(mode==='test'?'🧪 Test Mode — ไม่ใช้เงินจริง':'💰 Real Mode — ใช้ Binance จริง');
+}
+
+function toggleBot2(chk) {
+  if(S.trMode==='real'&&(!S.bot.apiKey||!S.bot.apiSecret)) {
+    chk.checked=false;
+    showToast('กรุณาบันทึก API Key ก่อนเปิด Bot');
+    return;
+  }
+  S.bot.enabled=chk.checked;
+  updateBotUI2();
+  botLog2(S.bot.enabled?'🟢 Bot เปิดแล้ว — รอสัญญาณ AI':'🔴 Bot ปิดแล้ว');
+  showToast('Bot: '+(S.bot.enabled?'เปิด ✓':'ปิด'));
+}
+
+function updateBotUI2() {
+  const dot=el('botDot2'), lbl=el('botLabel2'), sub=el('botSub2');
+  if(!dot) return;
+  if(S.bot.enabled) {
+    dot.className='bot-dot on';
+    lbl.textContent='Bot: เปิดอยู่';
+    sub.textContent=(S.bot.testnet?'Test':'Real')+' · $'+S.bot.orderSizeUSD+'/trade';
+  } else {
+    dot.className='bot-dot off';
+    lbl.textContent='Bot: ปิดอยู่';
+    sub.textContent=S.bot.apiKey||S.trMode==='test'?'เปิด toggle เพื่อเริ่ม':'ต้องการ API Key';
+  }
+  const chk=document.getElementById('botToggle2');
+  if(chk) chk.checked=S.bot.enabled;
+}
+
+function botLog2(msg) {
+  const now=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  S.bot.log.unshift('['+now+'] '+msg);
+  if(S.bot.log.length>50) S.bot.log.pop();
+  const logEl=el('botLog2');
+  if(logEl) logEl.innerHTML=S.bot.log.map(l=>`<div>${l}</div>`).join('')||'<span style="color:var(--text3)">-- รอการทำงาน --</span>';
+  const lastEl=el('bot-last-action2');
+  if(lastEl&&S.bot.lastAction){lastEl.textContent=S.bot.lastAction.toUpperCase()+' sent';lastEl.className='bot-action '+(S.bot.lastAction==='buy'?'buy':S.bot.lastAction==='sell'?'sell':'hold');}
+}
+
+function updateBotSignalDisplay(sig) {
+  if(!sig) return;
+  const col=sig.isBuy?'var(--green)':sig.isSell?'var(--red)':'var(--yellow)';
+  const nameEl=el('bot-sig-name2'), scoreEl=el('bot-sig-score2'), descEl=el('bot-last-action-desc2');
+  if(nameEl){ nameEl.textContent=sig.sigName; nameEl.style.color=col; }
+  if(scoreEl){ scoreEl.textContent=(sig.score>=0?'+':'')+sig.score+'/19'; }
+  if(descEl){ descEl.textContent='Confidence: '+sig.confidence+'% · '+S.coin+'/USD'; }
 }
 
 function processPaperTrade(sig) {
+  // Only runs in auto mode (Settings → Data Settings paperMode)
   if(!sig||!S.currentPrice) return;
-  const openTrade = S.paperTrades.find(t=>t.status==='open');
-  const mode = document.getElementById('paperMode')?.value||'auto';
-  if(mode!=='auto') return;
+  const mode = document.getElementById('paperMode')?.value||'manual';
+  if(mode!=='auto') return; // user must explicitly choose auto mode
 
-  // Close existing trade if signal changed
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+
+  // Close existing trade if signal reversed
   if(openTrade) {
     const shouldClose = (openTrade.side==='buy'&&(sig.sigName.includes('SELL')||sig.sigName==='HOLD'))
       ||(openTrade.side==='sell'&&(sig.sigName.includes('BUY')||sig.sigName==='HOLD'));
     if(shouldClose) {
-      openTrade.status='closed';
-      openTrade.exitPrice=S.currentPrice;
-      openTrade.exitTime=Date.now();
+      openTrade.status='closed'; openTrade.exitPrice=S.currentPrice; openTrade.exitTime=Date.now();
       const pnlPct = openTrade.side==='buy'
         ? (S.currentPrice-openTrade.entryPrice)/openTrade.entryPrice*100
         : (openTrade.entryPrice-S.currentPrice)/openTrade.entryPrice*100;
       openTrade.pnlPct=pnlPct;
-      openTrade.pnlUSD=(openTrade.amount||S.tradeSize||1000)*pnlPct/100;
-      const startVal = S.perfHistory.length?S.perfHistory[S.perfHistory.length-1].val:10000;
-      const newVal = startVal*(1+pnlPct/100);
-      S.perfHistory.push({t:Date.now(),val:newVal,pnl:pnlPct});
+      openTrade.pnlUSD=openTrade.amount*pnlPct/100;
+      // Update wallet
+      if(openTrade.side==='buy') {
+        S.testUSDT += openTrade.coinQty*S.currentPrice;
+        S.testHoldings[openTrade.coin]=Math.max(0,(S.testHoldings[openTrade.coin]||0)-openTrade.coinQty);
+      } else {
+        S.testUSDT += openTrade.amount + openTrade.pnlUSD;
+        S.testHoldings[openTrade.coin]=Math.max(0,(S.testHoldings[openTrade.coin]||0)+openTrade.coinQty);
+      }
+      const sv=S.perfHistory.length?S.perfHistory[S.perfHistory.length-1].val:S.testDeposited;
+      S.perfHistory.push({t:Date.now(),val:sv*(1+pnlPct/100),pnl:pnlPct});
       savePaper(); renderPaper(); return;
     }
   }
 
-  // Open new trade on BUY/SELL signal (not HOLD, not if already open)
+  // Open new trade on strong BUY/SELL signal
   if(!openTrade && (sig.isBuy||sig.isSell) && !sig.sigName.includes('WEAK')) {
-    const sz=S.tradeSize||1000;
+    const side=sig.isBuy?'buy':'sell';
+    const sz=Math.min(S.tradeSize||1000, S.testUSDT);
+    if(sz<10) { savePaper(); return; } // not enough funds
+    const qty=sz/S.currentPrice;
+    S.testUSDT-=sz;
+    S.testHoldings[S.coin]=(S.testHoldings[S.coin]||0)+(side==='buy'?qty:-qty);
     S.paperTrades.push({
-      id:Date.now(), side:sig.isBuy?'buy':'sell',
-      coin:S.coin, coinQty:sz/S.currentPrice, amount:sz,
+      id:Date.now(), side, coin:S.coin, coinQty:qty, amount:sz,
       entryPrice:S.currentPrice, entryTime:Date.now(),
       signal:sig.sigName, status:'open',
       exitPrice:null, exitTime:null, pnlPct:null, pnlUSD:null,
@@ -2084,51 +2407,14 @@ function processPaperTrade(sig) {
 function renderPaper() {
   loadPaper();
   const trades=S.paperTrades;
-  const closed=trades.filter(t=>t.status==='closed');
   const open=trades.filter(t=>t.status==='open');
-  const wins=closed.filter(t=>t.pnlPct>0).length;
-  const wr=closed.length?((wins/closed.length)*100).toFixed(1):0;
-  const totalPnl=closed.reduce((s,t)=>s+(t.pnlPct||0),0);
-  const portVal=10000*(1+totalPnl/100/Math.max(closed.length,1)*closed.length);
-  const unrealizedPnl=open.length&&S.currentPrice?
-    open.map(t=>t.side==='buy'?(S.currentPrice-t.entryPrice)/t.entryPrice*100:(t.entryPrice-S.currentPrice)/t.entryPrice*100)[0]:null;
-
-  el('ps-wr').textContent=wr+'%';
-  el('ps-wr').className='ps-val '+(parseFloat(wr)>=50?'g':'r');
-  el('ps-wrsub').textContent=closed.length+' closed trades';
-  el('ps-ret').textContent=(totalPnl>=0?'+':'')+totalPnl.toFixed(1)+'%';
-  el('ps-ret').className='ps-val '+(totalPnl>=0?'g':'r');
-  el('ps-val').textContent='$'+portVal.toFixed(0);
-  el('paperOpenCount').textContent=open.length+' Open';
-
-  // Update manual trade panel
-  const hasOpen = open.length > 0;
-  const btnBuy = document.getElementById('btn-manual-buy');
-  const btnSell = document.getElementById('btn-manual-sell');
-  const btnClose = document.getElementById('btn-manual-close');
-  const mtPrice = document.getElementById('mt-price');
-  if(btnBuy) btnBuy.disabled = hasOpen;
-  if(btnSell) btnSell.disabled = hasOpen;
-  if(btnClose) btnClose.disabled = !hasOpen;
-  if(mtPrice && S.currentPrice) mtPrice.textContent = '$'+Math.round(S.currentPrice).toLocaleString();
-  if(hasOpen && btnClose) {
-    const ot = open[0];
-    const liveP = S.currentPrice ? (ot.side==='buy'?(S.currentPrice-ot.entryPrice)/ot.entryPrice*100:(ot.entryPrice-S.currentPrice)/ot.entryPrice*100) : null;
-    if(liveP!=null) btnClose.textContent = `❌ ปิด Position (${liveP>=0?'+':''}${liveP.toFixed(2)}%)`;
-  } else if(btnClose) { btnClose.textContent = '❌ ปิด Position'; }
-
-  if(unrealizedPnl!=null){
-    el('ps-unrealized').textContent=(unrealizedPnl>=0?'+':'')+unrealizedPnl.toFixed(2)+'%';
-    el('ps-unrealized').className='ps-val '+(unrealizedPnl>=0?'g':'r');
-    el('ps-usub').textContent='BTC open position';
-  } else {
-    el('ps-unrealized').textContent='--';
-    el('ps-unrealized').className='ps-val';
-    el('ps-usub').textContent='ไม่มี open position';
-  }
-
-  // Render trade list
+  // Update open count pill
+  const ocEl=el('paperOpenCount'); if(ocEl) ocEl.textContent=open.length+' Open';
+  // Update portfolio wallet cards
+  updatePortfolio();
+  // Render trade history table
   const list=document.getElementById('tradeList');
+  if(!list) return;
   if(!trades.length){ list.innerHTML='<div class="empty-trades" style="padding:20px;text-align:center;color:var(--text3)">ยังไม่มีรายการ รอสัญญาณ AI...</div>'; return; }
   const sorted=[...trades].reverse();
   const fmtTime = ts => {
@@ -2153,7 +2439,7 @@ function renderPaper() {
     const sz  = t.amount||S.tradeSize||1000;
     const pnlUSD = pnl!=null ? sz*pnl/100 : (t.pnlUSD||null);
     const pnlCls = pnl>0?'trade-pnl-pos':pnl<0?'trade-pnl-neg':'';
-    const qty   = t.coinQty!=null ? t.coinQty.toFixed(5) : (sz/t.entryPrice).toFixed(5);
+    const qty   = t.coinQty!=null ? t.coinQty.toFixed(6) : (sz/t.entryPrice).toFixed(6);
     const coin  = t.coin||'BTC';
     return `<div class="trade-item">
       <div class="trade-cell"><span class="trade-side ${t.side}">${t.side==='buy'?'BUY':'SELL'}</span></div>
@@ -2163,15 +2449,14 @@ function renderPaper() {
       <div class="trade-cell">${t.exitPrice?fmtPrice(t.exitPrice):'<span style="color:var(--text3)">--</span>'}</div>
       <div class="trade-cell" style="color:var(--text2)">${qty}<br><span style="font-size:.62rem;color:var(--text3)">${coin}</span></div>
       <div class="trade-cell ${pnlCls}">${pnl!=null?(pnl>=0?'+':'')+pnl.toFixed(2)+'%':'--'}</div>
-      <div class="trade-cell ${pnlCls}">${pnlUSD!=null?(pnlUSD>=0?'+':'')+pnlUSD.toFixed(2):'--'}</div>
+      <div class="trade-cell ${pnlCls}">${pnlUSD!=null?(pnlUSD>=0?'+':'')+'$'+Math.abs(pnlUSD).toFixed(2):'--'}</div>
       <div class="trade-cell"><span class="trade-status ${t.status}">${t.status==='open'?'Open':'Closed'}</span></div>
     </div>`;
   }).join('');
-
-  renderPerfChart();
 }
 
 function renderPerfChart() {
+  // Chart removed from new unified UI — kept for backward compat
   const ctx=document.getElementById('perfChart'); if(!ctx) return;
   if(CI.perf) CI.perf.destroy();
   const ph=S.perfHistory.length?S.perfHistory:[{val:10000,t:Date.now()}];
@@ -2194,10 +2479,13 @@ function renderPerfChart() {
 }
 
 function resetPaper() {
-  if(!confirm('รีเซ็ต Paper Trade ทั้งหมด?')) return;
+  if(!confirm('รีเซ็ต Trading ทั้งหมด? (trades + wallet)')) return;
   S.paperTrades=[]; S.perfHistory=[];
-  localStorage.removeItem('investai_trades'); localStorage.removeItem('investai_perf');
-  renderPaper(); showToast('รีเซ็ต Paper Trade แล้ว');
+  S.testUSDT=10000; S.testHoldings={}; S.testDeposited=10000;
+  localStorage.removeItem('investai_trades');
+  localStorage.removeItem('investai_perf');
+  localStorage.removeItem('investai_wallet');
+  renderPaper(); showToast('รีเซ็ต Trading แล้ว ✓');
 }
 
 /* ════════════════════════════════════════
@@ -2375,9 +2663,11 @@ function processAll(priceData) {
     checkSignalChange(sig);
     processPaperTrade(sig);
     checkAlerts();
+    updateBotSignalDisplay(sig);
   }
   drawCandles();
   renderPaper();
+  updatePortfolio();
   updatePriceSuggest();
   if(!S.chatReady) { initChat(); S.chatReady=true; }
   startCountdown();
@@ -2550,73 +2840,35 @@ async function executeBotOrder(side, reason) {
     } else {
       botLog('❌ Order ล้มเหลว: '+msg);
     }
-    showToast('Bot order error — ดู log ใน Settings');
+    showToast('Bot order error — ดู log ใน Trading');
   }
 }
 
-function botLog(msg) {
-  const now = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  S.bot.log.unshift('['+now+'] '+msg);
-  if(S.bot.log.length>50) S.bot.log.pop();
-  const logEl = el('botLog');
-  if(logEl) logEl.innerHTML = S.bot.log.map(l=>`<div>${l}</div>`).join('') || '<span style="color:var(--text3)">-- รอการทำงาน --</span>';
-  // Also update last action label
-  const lastEl = el('botLastAction');
-  if(lastEl && S.bot.lastAction) {
-    lastEl.textContent = S.bot.lastAction.toUpperCase()+' sent';
-    lastEl.className = 'bot-action '+(S.bot.lastAction==='buy'?'buy':S.bot.lastAction==='sell'?'sell':'hold');
-  }
-}
+function botLog(msg) { botLog2(msg); } // redirect to unified Trading section log
 
-function updateBotUI() {
-  const dot = el('botDot'), lbl = el('botLabel'), sub = el('botSub'), btn = el('botToggleBtn');
-  if(!dot) return;
-  if(S.bot.enabled) {
-    dot.className='bot-dot on'; lbl.textContent='Bot: เปิดอยู่';
-    sub.textContent=(S.bot.testnet?'Testnet':'Real Binance')+' · $'+S.bot.orderSizeUSD+'/trade';
-    if(btn){btn.textContent='⏹ ปิด Bot';btn.style.background='var(--rd)';btn.style.color='var(--red)';btn.style.borderColor='rgba(239,68,68,.3)';}
-  } else {
-    dot.className='bot-dot off'; lbl.textContent='Bot: ปิดอยู่';
-    sub.textContent=S.bot.apiKey?'มี API Key — กด เปิด Bot':'กรอก API Key แล้วเปิด Bot';
-    if(btn){btn.textContent='▶ เปิด Bot';btn.style.background='var(--gd)';btn.style.color='var(--green)';btn.style.borderColor='rgba(34,197,94,.3)';}
-  }
-}
+function updateBotUI() { updateBotUI2(); } // redirect to unified bot UI
 
-function saveBotSettings() {
-  S.bot.apiKey       = document.getElementById('bnApiKey')?.value.trim()||'';
-  S.bot.apiSecret    = document.getElementById('bnApiSecret')?.value.trim()||'';
-  S.bot.orderSizeUSD = parseFloat(document.getElementById('bnOrderSize')?.value)||100;
-  S.bot.testnet      = document.getElementById('bnTestnet')?.value==='1';
-  // Store encrypted? No — just warn user about localStorage
-  localStorage.setItem('investai_bot_cfg', JSON.stringify({
-    apiKey:S.bot.apiKey, apiSecret:S.bot.apiSecret,
-    orderSizeUSD:S.bot.orderSizeUSD, testnet:S.bot.testnet
-  }));
-  updateBotUI();
-  showToast('บันทึก Bot Config แล้ว ✓');
-  botLog('💾 Config saved — '+(S.bot.testnet?'Testnet':'Real')+' $'+S.bot.orderSizeUSD+'/trade');
-}
+function saveBotSettings() { /* Moved to saveRealApiSettings() in Trading section */ }
 
 function loadBotSettings() {
   try {
     const cfg=JSON.parse(localStorage.getItem('investai_bot_cfg')||'{}');
-    if(cfg.apiKey)    { S.bot.apiKey=cfg.apiKey;    const el2=document.getElementById('bnApiKey');    if(el2)el2.value=cfg.apiKey; }
-    if(cfg.apiSecret) { S.bot.apiSecret=cfg.apiSecret; const el2=document.getElementById('bnApiSecret'); if(el2)el2.value=cfg.apiSecret; }
-    if(cfg.orderSizeUSD){ S.bot.orderSizeUSD=cfg.orderSizeUSD; const el2=document.getElementById('bnOrderSize'); if(el2)el2.value=cfg.orderSizeUSD; }
+    if(cfg.apiKey)    { S.bot.apiKey=cfg.apiKey;
+      const k1=document.getElementById('tr-apiKey'); if(k1)k1.value=cfg.apiKey; }
+    if(cfg.apiSecret) { S.bot.apiSecret=cfg.apiSecret;
+      const s1=document.getElementById('tr-apiSecret'); if(s1)s1.value=cfg.apiSecret; }
+    if(cfg.orderSizeUSD){ S.bot.orderSizeUSD=cfg.orderSizeUSD;
+      const o1=document.getElementById('tr-bot-size'); if(o1)o1.value=cfg.orderSizeUSD; }
     S.bot.testnet = cfg.testnet!==false;
-    const selEl=document.getElementById('bnTestnet'); if(selEl) selEl.value=S.bot.testnet?'1':'0';
   } catch(e){}
-  updateBotUI();
+  updateBotUI2();
 }
 
 function toggleBot() {
-  if(!S.bot.apiKey||!S.bot.apiSecret) {
-    showToast('กรุณากรอก API Key และ Secret ก่อน');
-    return;
-  }
+  // Legacy — delegate to new system
   S.bot.enabled = !S.bot.enabled;
-  updateBotUI();
-  botLog(S.bot.enabled ? '🟢 Bot เปิดแล้ว — รอสัญญาณ AI' : '🔴 Bot ปิดแล้ว');
+  updateBotUI2();
+  botLog2(S.bot.enabled?'🟢 Bot เปิดแล้ว':'🔴 Bot ปิดแล้ว');
   showToast('Bot: '+(S.bot.enabled?'เปิด ✓':'ปิด'));
 }
 
@@ -2628,14 +2880,32 @@ async function runBot(sig) {
   const isBuyNow  = sig.sigName.includes('BUY')&&!sig.sigName.includes('WEAK');
   const isSellNow = sig.sigName.includes('SELL')&&!sig.sigName.includes('WEAK');
 
-  if(isBuyNow  && prev.sigName!==sig.sigName) {
-    const el2=el('botLastAction');
-    if(el2){el2.textContent='BUY';el2.className='bot-action buy';}
-    await executeBotOrder('buy', sig.sigName+' (score '+sig.score+')');
-  } else if(isSellNow && prev.sigName!==sig.sigName) {
-    const el2=el('botLastAction');
-    if(el2){el2.textContent='SELL';el2.className='bot-action sell';}
-    await executeBotOrder('sell', sig.sigName+' (score '+sig.score+')');
+  const la=el('bot-last-action2');
+
+  if(isBuyNow) {
+    if(la){la.textContent='BUY';la.className='bot-action buy';}
+    if(S.trMode==='test') {
+      // Auto buy in test mode using bot order size
+      const sz=S.bot.orderSizeUSD||100;
+      if(S.testUSDT>=sz&&!S.paperTrades.find(t=>t.status==='open')) {
+        const qty=sz/S.currentPrice;
+        S.testUSDT-=sz; S.testHoldings[S.coin]=(S.testHoldings[S.coin]||0)+qty;
+        S.paperTrades.push({id:Date.now(),side:'buy',coin:S.coin,coinQty:qty,amount:sz,entryPrice:S.currentPrice,entryTime:Date.now(),signal:sig.sigName,status:'open',exitPrice:null,exitTime:null,pnlPct:null,pnlUSD:null});
+        savePaper(); renderPaper();
+        botLog2('🤖 AUTO BUY '+qty.toFixed(5)+' '+S.coin+' @ '+fmtPrice(S.currentPrice)+' ('+sig.sigName+')');
+      }
+    } else {
+      await executeBotOrder('buy', sig.sigName+' (score '+sig.score+')');
+    }
+  } else if(isSellNow) {
+    if(la){la.textContent='SELL';la.className='bot-action sell';}
+    if(S.trMode==='test') {
+      // Auto close/sell in test mode
+      const openTrade=S.paperTrades.find(t=>t.status==='open');
+      if(openTrade) { closePosNow(); botLog2('🤖 AUTO SELL/CLOSE @ '+fmtPrice(S.currentPrice)+' ('+sig.sigName+')'); }
+    } else {
+      await executeBotOrder('sell', sig.sigName+' (score '+sig.score+')');
+    }
   }
 }
 
@@ -2911,10 +3181,12 @@ window.addEventListener('load', async ()=>{
   loadAlerts();
   loadPaper();
   loadBotSettings();
+  setTradingMode('test'); // init trading mode tabs + UI
+  updateBotUI2();
   const savedToken=localStorage.getItem('investai_line_token');
-  if(savedToken) document.getElementById('lineToken').value=savedToken;
+  if(savedToken) { const lt=document.getElementById('lineToken'); if(lt)lt.value=savedToken; }
   const savedInterval=localStorage.getItem('investai_refresh');
-  if(savedInterval) { S.refreshSec=parseInt(savedInterval); document.getElementById('refreshInterval').value=savedInterval; }
+  if(savedInterval) { S.refreshSec=parseInt(savedInterval); const ri=document.getElementById('refreshInterval'); if(ri)ri.value=savedInterval; }
   renderPaper();
   await loadData();
 
