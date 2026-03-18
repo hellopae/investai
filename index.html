@@ -1053,9 +1053,31 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
         </div>
         <div style="font-size:.7rem;color:var(--text3);margin-top:5px" id="bot-last-action-desc2">รอสัญญาณ AI...</div>
       </div>
-      <!-- Order size -->
+      <!-- Order size + SL/TP -->
       <label class="form-label">Order Size (USDT per trade)</label>
-      <input type="number" class="form-input" id="tr-bot-size" value="100" min="10" step="10" style="margin-bottom:12px">
+      <input type="number" class="form-input" id="tr-bot-size" value="100" min="10" step="10" style="margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <label class="form-label" style="color:var(--red)">🛑 Stop Loss (%)</label>
+          <input type="number" class="form-input" id="tr-sl-pct" value="3" min="0.5" max="20" step="0.5" style="margin-bottom:0;border-color:rgba(239,68,68,.3)" oninput="S.slPct=parseFloat(this.value)||3;drawCandles()">
+        </div>
+        <div>
+          <label class="form-label" style="color:var(--green)">✅ Take Profit (%)</label>
+          <input type="number" class="form-input" id="tr-tp-pct" value="6" min="1" max="100" step="0.5" style="margin-bottom:0;border-color:rgba(34,197,94,.3)" oninput="S.tpPct=parseFloat(this.value)||6;drawCandles()">
+        </div>
+      </div>
+      <!-- Signal Confirmation -->
+      <div style="margin-bottom:12px">
+        <label class="form-label">🔄 ยืนยันสัญญาณก่อน trade (ครั้ง)</label>
+        <input type="range" id="tr-confirm-cnt" min="1" max="5" value="2" style="width:100%;accent-color:var(--blueb);cursor:pointer" oninput="S.requiredConfirm=parseInt(this.value);document.getElementById('tr-confirm-val').textContent=this.value+' ครั้ง'">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:.68rem;color:var(--text3);margin-top:3px">
+          <span>1 (เร็ว)</span>
+          <span id="tr-confirm-val" style="color:var(--blueb);font-weight:700;font-family:var(--mono)">2 ครั้ง</span>
+          <span>5 (แม่น)</span>
+        </div>
+      </div>
+      <!-- Confirmation status -->
+      <div style="font-size:.72rem;text-align:center;margin-bottom:8px;padding:4px;border-radius:var(--rs);background:var(--bg2)" id="bot-confirm-status" style="color:var(--text3)">รอสัญญาณ...</div>
       <!-- Bot Log -->
       <div style="font-size:.68rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Activity Log</div>
       <div class="bot-log-box" id="botLog2"><span style="color:var(--text3)">-- รอการทำงาน --</span></div>
@@ -1068,6 +1090,29 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="card-title" style="margin-bottom:0">📋 Trade History</div>
       <span style="font-size:.72rem;color:var(--text2)" id="paperOpenCount">0 Open</span>
+    </div>
+    <!-- Performance Stats Bar -->
+    <div id="tradeStatsBar" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:12px">
+      <div style="text-align:center">
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Win Rate</div>
+        <div style="font-family:var(--mono);font-size:.95rem;font-weight:700" id="stat-winrate" style="color:var(--text2)">--%</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Avg Win</div>
+        <div style="font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--green)" id="stat-avgwin">--</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Avg Loss</div>
+        <div style="font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--red)" id="stat-avgloss">--</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Profit Factor</div>
+        <div style="font-family:var(--mono);font-size:.95rem;font-weight:700" id="stat-pf">--</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Max Drawdown</div>
+        <div style="font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--red)" id="stat-maxdd">--%</div>
+      </div>
     </div>
     <div class="trade-list" id="tradeList" style="max-height:460px;overflow-x:auto">
       <div class="empty-trades" style="padding:20px;text-align:center;color:var(--text3)">ยังไม่มีรายการ รอสัญญาณ AI...</div>
@@ -1236,6 +1281,12 @@ const S = {
   testUSDT: 10000,       // virtual cash balance
   testHoldings: {},      // { 'BTC': qty, ... }
   testDeposited: 10000,  // total deposited for P&L base
+  slPct: 3,              // Stop Loss %
+  tpPct: 6,              // Take Profit %
+  confirmCount: 0,       // consecutive same-signal count
+  confirmSignal: null,   // signal name being confirmed
+  requiredConfirm: 2,    // confirmations needed before trade
+  volumes: [],           // [{t, v}] volume data from API
   bot: {
     enabled: false,
     apiKey: '',
@@ -1282,6 +1333,20 @@ async function fetchPrice() {
   const r = await fetch(`${BASE}/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
   if(!r.ok) throw new Error('Price fetch failed');
   return (await r.json())[coinId];
+}
+
+async function fetchVolume(days) {
+  const coinId = COINS[S.coin].id;
+  const r = await fetch(`${BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
+  if(!r.ok) throw new Error('Volume fetch failed');
+  const data = await r.json();
+  S.volumes = (data.total_volumes||[]).map(([t,v])=>({t,v}));
+  // Merge volumes into candles by nearest timestamp
+  S.candles.forEach(c=>{
+    let nearest=null, nd=Infinity;
+    S.volumes.forEach(v=>{ const d=Math.abs(v.t-c.t); if(d<nd){nd=d;nearest=v;} });
+    c.volume = nearest ? nearest.v : 0;
+  });
 }
 
 // Format price based on coin magnitude
@@ -1509,9 +1574,30 @@ function generateSignal(candles) {
     score+=trScore;
   }
 
-  // Volume (compare last 3 vs previous 3)
-  let vtSig, vtScore=0;
-  indicators.push({name:'Volume Trend', val:'N/A', sig:'HOLD', score:0});
+  // ── Volume OBV (On-Balance Volume) ── max ±2
+  let obvScore=0, obvSig='HOLD', obvLabel='N/A';
+  const hasVol = candles.some(c=>c.volume&&c.volume>0);
+  if(hasVol) {
+    let obv=0;
+    const obvArr=[];
+    candles.forEach((c,i)=>{
+      if(i===0){obvArr.push(0);return;}
+      const prev=candles[i-1];
+      if(c.c>prev.c)      obv+=(c.volume||0);
+      else if(c.c<prev.c) obv-=(c.volume||0);
+      obvArr.push(obv);
+    });
+    if(obvArr.length>=10){
+      const last5avg=obvArr.slice(-5).reduce((a,b)=>a+b,0)/5;
+      const prev5avg=obvArr.slice(-10,-5).reduce((a,b)=>a+b,0)/5;
+      if(last5avg>prev5avg*1.02)      { obvScore=2; obvSig='BUY'; reasons.push('🟢 OBV ขาขึ้น — Volume ยืนยัน Bullish trend (กำลังซื้อแข็ง)'); }
+      else if(last5avg<prev5avg*0.98) { obvScore=-2; obvSig='SELL'; reasons.push('🔴 OBV ขาลง — Volume ยืนยัน Bearish trend (กำลังขายแรง)'); }
+      const lastObv=obvArr[obvArr.length-1];
+      obvLabel=(lastObv>=0?'+':'')+fmtShort(Math.abs(lastObv));
+    }
+  }
+  score+=obvScore;
+  indicators.push({name:'Volume (OBV)', val:obvLabel, sig:obvSig, score:obvScore});
 
   // ── Fear & Greed Index (contrarian) ── max ±2
   let fngScore=0, fngSig='HOLD';
@@ -1575,7 +1661,7 @@ function generateSignal(candles) {
   }
 
   // Determine final signal
-  const maxScore = 19; // max possible (13 base + 2 F&G + 2 Fib + 2 Wave)
+  const maxScore = 21; // max possible (13 base + 2 F&G + 2 Fib + 2 Wave + 2 OBV)
   const confRaw = Math.abs(score)/maxScore*100;
   const confidence = Math.min(95, Math.max(35, 40+confRaw*0.55));
 
@@ -2027,20 +2113,56 @@ function drawCandles() {
     ctx.fillText(isBuy?'BUY':'SELL', x, isBuy?py(d.l)+32:py(d.h)-22);
   }
 
-  // ── Volume bars ──
+  // ── Volume bars (real data if available, else price-change proxy) ──
   const vTop=pT+cH+vGap;
-  const closes=D.map(d=>d.c);
-  const priceChanges=D.map((d,i)=>i===0?0:Math.abs(d.c-D[i-1].c));
-  const maxChg=Math.max(...priceChanges)||1;
+  const hasRealVol = D.some(d=>d.volume&&d.volume>0);
+  const volArr = D.map(d=> hasRealVol ? (d.volume||0) : Math.abs(d.c-(D[D.indexOf(d)-1]||d).o));
+  const maxVol = Math.max(...volArr)||1;
   D.forEach((d,i)=>{
     const x=px(i);
-    const h=Math.max(2,vH*(priceChanges[i]/maxChg));
-    ctx.fillStyle=d.c>=d.o?'rgba(34,197,94,.35)':'rgba(239,68,68,.35)';
+    const h=Math.max(1.5, vH*(volArr[i]/maxVol));
+    const isBull=d.c>=d.o;
+    ctx.fillStyle=isBull?'rgba(34,197,94,.42)':'rgba(239,68,68,.38)';
     ctx.fillRect(x-cW/2, vTop+vH-h, cW, h);
   });
   // Volume label
   ctx.fillStyle='#3a5070'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='left';
-  ctx.fillText('VOL', pL-68, vTop+vH/2+4);
+  ctx.fillText(hasRealVol?'VOL ●':'VOL ~', pL-68, vTop+vH/2+4);
+
+  // ── SL / TP lines for open position ──
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+  if(openTrade && S.currentPrice) {
+    const entry = openTrade.entryPrice;
+    const isBuyPos = openTrade.side==='buy';
+    const sl = isBuyPos ? entry*(1-S.slPct/100) : entry*(1+S.slPct/100);
+    const tp = isBuyPos ? entry*(1+S.tpPct/100) : entry*(1-S.tpPct/100);
+    ctx.font='bold 9px IBM Plex Mono,monospace'; ctx.textAlign='right';
+    // Entry line (yellow)
+    const eyY=py(entry);
+    if(eyY>pT && eyY<pT+cH) {
+      ctx.strokeStyle='rgba(234,179,8,.55)'; ctx.lineWidth=1; ctx.setLineDash([5,3]);
+      ctx.beginPath(); ctx.moveTo(pL,eyY); ctx.lineTo(W-pR,eyY); ctx.stroke();
+      ctx.fillStyle='rgba(234,179,8,.9)';
+      ctx.fillText('ENTRY '+fmtPrice(entry), W-pR-4, eyY-3);
+    }
+    // SL line (red dashed)
+    const slY=py(sl);
+    if(slY>pT && slY<pT+cH) {
+      ctx.strokeStyle='rgba(239,68,68,.7)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(pL,slY); ctx.lineTo(W-pR,slY); ctx.stroke();
+      ctx.fillStyle='rgba(239,68,68,.95)';
+      ctx.fillText('SL -'+S.slPct+'% '+fmtPrice(sl), W-pR-4, slY+11);
+    }
+    // TP line (green dashed)
+    const tpY=py(tp);
+    if(tpY>pT && tpY<pT+cH) {
+      ctx.strokeStyle='rgba(34,197,94,.7)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(pL,tpY); ctx.lineTo(W-pR,tpY); ctx.stroke();
+      ctx.fillStyle='rgba(34,197,94,.95)';
+      ctx.fillText('TP +'+S.tpPct+'% '+fmtPrice(tp), W-pR-4, tpY-3);
+    }
+    ctx.setLineDash([]);
+  }
 
   // ── OHLC display ──
   el('ci-o').textContent=fmtPrice(D[n-1].o);
@@ -2348,7 +2470,7 @@ function updateBotSignalDisplay(sig) {
   const col=sig.isBuy?'var(--green)':sig.isSell?'var(--red)':'var(--yellow)';
   const nameEl=el('bot-sig-name2'), scoreEl=el('bot-sig-score2'), descEl=el('bot-last-action-desc2');
   if(nameEl){ nameEl.textContent=sig.sigName; nameEl.style.color=col; }
-  if(scoreEl){ scoreEl.textContent=(sig.score>=0?'+':'')+sig.score+'/19'; }
+  if(scoreEl){ scoreEl.textContent=(sig.score>=0?'+':'')+sig.score+'/21'; }
   if(descEl){ descEl.textContent='Confidence: '+sig.confidence+'% · '+S.coin+'/USD'; }
 }
 
@@ -2453,6 +2575,7 @@ function renderPaper() {
       <div class="trade-cell"><span class="trade-status ${t.status}">${t.status==='open'?'Open':'Closed'}</span></div>
     </div>`;
   }).join('');
+  renderTradeStats();
 }
 
 function renderPerfChart() {
@@ -2482,10 +2605,75 @@ function resetPaper() {
   if(!confirm('รีเซ็ต Trading ทั้งหมด? (trades + wallet)')) return;
   S.paperTrades=[]; S.perfHistory=[];
   S.testUSDT=10000; S.testHoldings={}; S.testDeposited=10000;
+  S.confirmCount=0; S.confirmSignal=null;
   localStorage.removeItem('investai_trades');
   localStorage.removeItem('investai_perf');
   localStorage.removeItem('investai_wallet');
   renderPaper(); showToast('รีเซ็ต Trading แล้ว ✓');
+}
+
+/* ════════════════════════════════════════
+   STOP LOSS / TAKE PROFIT AUTO-CLOSE
+════════════════════════════════════════ */
+function checkStopLossTakeProfit() {
+  if(!S.currentPrice) return;
+  const openTrade = S.paperTrades.find(t=>t.status==='open');
+  if(!openTrade) return;
+
+  const livePnlPct = openTrade.side==='buy'
+    ? (S.currentPrice - openTrade.entryPrice) / openTrade.entryPrice * 100
+    : (openTrade.entryPrice - S.currentPrice) / openTrade.entryPrice * 100;
+
+  if(livePnlPct <= -S.slPct) {
+    botLog2('🛑 Stop Loss Hit! Loss: '+livePnlPct.toFixed(2)+'% @ '+fmtPrice(S.currentPrice));
+    showToast('🛑 Stop Loss Hit! '+livePnlPct.toFixed(2)+'%');
+    closePosNow();
+    sendBrowserNotif('Invest AI — Stop Loss', 'SL Hit: '+livePnlPct.toFixed(2)+'% @ '+fmtPrice(S.currentPrice));
+  } else if(livePnlPct >= S.tpPct) {
+    botLog2('✅ Take Profit Hit! Profit: +'+livePnlPct.toFixed(2)+'% @ '+fmtPrice(S.currentPrice));
+    showToast('✅ Take Profit Hit! +'+livePnlPct.toFixed(2)+'%');
+    closePosNow();
+    sendBrowserNotif('Invest AI — Take Profit', 'TP Hit: +'+livePnlPct.toFixed(2)+'% @ '+fmtPrice(S.currentPrice));
+  }
+}
+
+/* ════════════════════════════════════════
+   TRADE STATS CALCULATION
+════════════════════════════════════════ */
+function calcTradeStats() {
+  const closed = S.paperTrades.filter(t=>t.status==='closed' && t.pnlPct!=null);
+  if(!closed.length) return null;
+  const wins   = closed.filter(t=>t.pnlPct>0);
+  const losses = closed.filter(t=>t.pnlPct<0);
+  const winRate   = wins.length / closed.length * 100;
+  const avgWin    = wins.length ? wins.reduce((s,t)=>s+t.pnlPct,0)/wins.length : 0;
+  const avgLoss   = losses.length ? losses.reduce((s,t)=>s+t.pnlPct,0)/losses.length : 0;
+  const grossWin  = wins.reduce((s,t)=>s+Math.abs(t.pnlUSD||t.amount*t.pnlPct/100||0),0);
+  const grossLoss = losses.reduce((s,t)=>s+Math.abs(t.pnlUSD||t.amount*Math.abs(t.pnlPct)/100||0),0);
+  const pf = grossLoss>0 ? grossWin/grossLoss : grossWin>0 ? 99 : 0;
+  let maxDD=0;
+  if(S.perfHistory.length>1) {
+    let peak=S.perfHistory[0].val;
+    S.perfHistory.forEach(p=>{ if(p.val>peak)peak=p.val; const dd=(peak-p.val)/peak*100; if(dd>maxDD)maxDD=dd; });
+  }
+  return { winRate, avgWin, avgLoss, pf, maxDD, total:closed.length, wins:wins.length };
+}
+
+function renderTradeStats() {
+  const s=calcTradeStats();
+  const set=(id,v,col)=>{ const e=el(id); if(e){e.textContent=v; if(col)e.style.color=col;} };
+  if(!s) {
+    set('stat-winrate','--%','var(--text2)'); set('stat-avgwin','--','var(--green)');
+    set('stat-avgloss','--','var(--red)'); set('stat-pf','--','var(--text2)'); set('stat-maxdd','--%','var(--red)');
+    return;
+  }
+  const wrCol = s.winRate>=55?'var(--green)':s.winRate>=45?'var(--yellow)':'var(--red)';
+  const pfCol = s.pf>=1.5?'var(--green)':s.pf>=1?'var(--yellow)':'var(--red)';
+  set('stat-winrate', s.winRate.toFixed(1)+'%', wrCol);
+  set('stat-avgwin',  (s.avgWin>=0?'+':'')+s.avgWin.toFixed(2)+'%', 'var(--green)');
+  set('stat-avgloss', s.avgLoss.toFixed(2)+'%', 'var(--red)');
+  set('stat-pf', s.pf>=99?'∞':s.pf.toFixed(2), pfCol);
+  set('stat-maxdd', '-'+s.maxDD.toFixed(1)+'%', s.maxDD>15?'var(--red)':s.maxDD>8?'var(--yellow)':'var(--text2)');
 }
 
 /* ════════════════════════════════════════
@@ -2605,7 +2793,6 @@ function checkSignalChange(newSig) {
       sendLineMsg(msg);
       showToast(`Signal: ${prev.sigName} → ${newSig.sigName}`);
     }
-    runBot(newSig); // fire bot if enabled
   }
   S.lastSignal=newSig;
 }
@@ -2636,6 +2823,8 @@ async function loadData() {
     S.marketData = priceData;
     S.isLive = true;
     el('apiBadge').textContent='LIVE DATA'; el('apiBadge').className='api-badge api-live';
+    // Fetch volume in parallel (non-blocking — updates candles then redraws if ready)
+    fetchVolume(S.tfDays).then(()=>{ drawCandles(); }).catch(()=>{});
     processAll(priceData);
   } catch(e) {
     console.warn('API error, using mock data:', e.message);
@@ -2664,9 +2853,11 @@ function processAll(priceData) {
     processPaperTrade(sig);
     checkAlerts();
     updateBotSignalDisplay(sig);
+    runBot(sig); // run every cycle for confirmation counter to accumulate
   }
   drawCandles();
   renderPaper();
+  checkStopLossTakeProfit(); // auto-close on SL/TP hit
   updatePortfolio();
   updatePriceSuggest();
   if(!S.chatReady) { initChat(); S.chatReady=true; }
@@ -2874,11 +3065,40 @@ function toggleBot() {
 
 async function runBot(sig) {
   if(!S.bot.enabled||!sig) return;
-  const prev = S.lastSignal;
-  if(!prev||prev.sigName===sig.sigName) return; // no change
 
-  const isBuyNow  = sig.sigName.includes('BUY')&&!sig.sigName.includes('WEAK');
-  const isSellNow = sig.sigName.includes('SELL')&&!sig.sigName.includes('WEAK');
+  /* ── Signal Confirmation Counter ── */
+  const currentSigName = sig.sigName;
+  if(S.confirmSignal === currentSigName) {
+    S.confirmCount++;
+  } else {
+    S.confirmCount = 1;
+    S.confirmSignal = currentSigName;
+  }
+
+  const needed = S.requiredConfirm || 2;
+  const confirmEl = el('bot-confirm-status');
+  const sigLabel = currentSigName.includes('BUY') ? '🟢 BUY' : currentSigName.includes('SELL') ? '🔴 SELL' : '🟡 HOLD';
+  if(confirmEl) {
+    if(S.confirmCount >= needed) {
+      confirmEl.textContent = '✅ Confirmed ('+S.confirmCount+'/'+needed+') — กำลัง Execute...';
+      confirmEl.style.color = 'var(--green)';
+    } else {
+      confirmEl.textContent = '⏳ Waiting... '+sigLabel+' ('+S.confirmCount+'/'+needed+')';
+      confirmEl.style.color = 'var(--yellow)';
+    }
+  }
+
+  // Only execute trade when confirmation threshold is reached
+  if(S.confirmCount < needed) {
+    botLog2('⏳ ยืนยัน '+sigLabel+': '+S.confirmCount+'/'+needed+' ครั้ง');
+    return;
+  }
+
+  // Reset counter after executing so it doesn't fire again until re-confirmed
+  S.confirmCount = 0;
+
+  const isBuyNow  = currentSigName.includes('BUY')&&!currentSigName.includes('WEAK');
+  const isSellNow = currentSigName.includes('SELL')&&!currentSigName.includes('WEAK');
 
   const la=el('bot-last-action2');
 
@@ -2892,19 +3112,19 @@ async function runBot(sig) {
         S.testUSDT-=sz; S.testHoldings[S.coin]=(S.testHoldings[S.coin]||0)+qty;
         S.paperTrades.push({id:Date.now(),side:'buy',coin:S.coin,coinQty:qty,amount:sz,entryPrice:S.currentPrice,entryTime:Date.now(),signal:sig.sigName,status:'open',exitPrice:null,exitTime:null,pnlPct:null,pnlUSD:null});
         savePaper(); renderPaper();
-        botLog2('🤖 AUTO BUY '+qty.toFixed(5)+' '+S.coin+' @ '+fmtPrice(S.currentPrice)+' ('+sig.sigName+')');
+        botLog2('🤖 AUTO BUY '+qty.toFixed(5)+' '+S.coin+' @ '+fmtPrice(S.currentPrice)+' ('+sig.sigName+' ยืนยัน '+needed+' ครั้ง)');
       }
     } else {
-      await executeBotOrder('buy', sig.sigName+' (score '+sig.score+')');
+      await executeBotOrder('buy', sig.sigName+' (score '+sig.score+', confirmed '+needed+'x)');
     }
   } else if(isSellNow) {
     if(la){la.textContent='SELL';la.className='bot-action sell';}
     if(S.trMode==='test') {
       // Auto close/sell in test mode
       const openTrade=S.paperTrades.find(t=>t.status==='open');
-      if(openTrade) { closePosNow(); botLog2('🤖 AUTO SELL/CLOSE @ '+fmtPrice(S.currentPrice)+' ('+sig.sigName+')'); }
+      if(openTrade) { closePosNow(); botLog2('🤖 AUTO SELL/CLOSE @ '+fmtPrice(S.currentPrice)+' ('+sig.sigName+' ยืนยัน '+needed+' ครั้ง)'); }
     } else {
-      await executeBotOrder('sell', sig.sigName+' (score '+sig.score+')');
+      await executeBotOrder('sell', sig.sigName+' (score '+sig.score+', confirmed '+needed+'x)');
     }
   }
 }
