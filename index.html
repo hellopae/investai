@@ -585,7 +585,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   height:62px; background:rgba(2,11,24,.97); backdrop-filter:blur(18px);
   border-top:1px solid var(--border); z-index:100;
 }
-.bn-grid { display:grid; grid-template-columns:repeat(5,1fr); height:100%; }
+.bn-grid { display:grid; grid-template-columns:repeat(4,1fr); height:100%; }
 .bn-btn {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:3px; background:transparent; border:none; cursor:pointer;
@@ -652,10 +652,9 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
     <span class="btc-chg" id="navChg">--</span>
   </div>
   <div class="nav-menu">
-    <button class="nm active" onclick="goTo('s-chart',this)">📊 กราฟ</button>
-    <button class="nm" onclick="goTo('s-signal',this)">🤖 AI Signal</button>
+    <button class="nm active" onclick="goTo('s-signal',this)">🔮 AI Signal</button>
+    <button class="nm" onclick="goTo('s-chart',this)">📊 กราฟ</button>
     <button class="nm" onclick="goTo('s-paper',this)">💰 Trading</button>
-    <button class="nm" onclick="goTo('s-news',this)">📰 News</button>
     <button class="nm" onclick="goTo('s-settings',this)">⚙️ ตั้งค่า</button>
   </div>
   <div class="nav-r">
@@ -672,7 +671,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
 <!-- ═══════════════════════════════
      SECTION: CHART
 ═══════════════════════════════ -->
-<section id="s-chart" class="active">
+<section id="s-chart">
   <!-- Stats Bar -->
   <div class="stats-bar">
     <div class="stat-item">
@@ -829,7 +828,7 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
 <!-- ═══════════════════════════════
      SECTION: AI SIGNAL
 ═══════════════════════════════ -->
-<section id="s-signal">
+<section id="s-signal" class="active">
   <div class="sh"><div class="st"><span class="ic">🤖</span> AI Signal Analysis</div><small style="color:var(--text2);font-size:.72rem">คำนวณจากข้อมูลจริง — ไม่ใช่คำแนะนำทางการเงิน</small></div>
 
   <!-- Signal Hero -->
@@ -1007,6 +1006,77 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
       <button class="chat-send-btn" onclick="sendChat()">ส่ง ↑</button>
     </div>
   </div>
+
+  <!-- ── News & Sentiment (merged from News tab) ── -->
+  <div class="sh" style="margin-top:8px;margin-bottom:12px"><div class="st"><span class="ic">📰</span> News &amp; Sentiment</div></div>
+
+  <!-- Aggregate Sentiment Panel -->
+  <div class="news-agg-panel" id="news-agg-panel">
+    <div>
+      <div style="font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Aggregate News Sentiment</div>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <div class="news-agg-score" id="news-agg-score">--</div>
+        <div class="news-agg-label" id="news-agg-label" style="color:var(--text2)">Loading...</div>
+      </div>
+      <div class="sentiment-bar-wrap">
+        <div class="sentiment-bar-fill" id="news-sent-bar" style="width:50%;background:var(--text3)"></div>
+      </div>
+      <div class="sentiment-bar-labels"><span>Very Bearish −1.0</span><span>Neutral 0</span><span>Very Bullish +1.0</span></div>
+      <div class="news-agg-counts">
+        <div class="news-agg-count-item"><span style="color:var(--green)">🟢</span><span id="news-bull-count">0 Bullish</span></div>
+        <div class="news-agg-count-item"><span style="color:var(--red)">🔴</span><span id="news-bear-count">0 Bearish</span></div>
+        <div class="news-agg-count-item"><span style="color:var(--yellow)">🟡</span><span id="news-neut-count">0 Neutral</span></div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:.72rem;color:var(--text2);margin-bottom:6px">Signal Impact</div>
+      <div id="news-signal-impact" style="font-size:.82rem;font-weight:600;color:var(--text)">--</div>
+    </div>
+  </div>
+
+  <!-- Market Transmission Chain -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:10px">🔗 Market Transmission Chain</div>
+    <div class="transmission-chain" id="transmission-chain">
+      <div style="color:var(--text3);font-size:.78rem">Loading transmission chain...</div>
+    </div>
+  </div>
+
+  <!-- Signal Tracker -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:10px">📡 Signal Tracker (News vs AI)</div>
+    <div style="overflow-x:auto">
+      <table class="signal-tracker-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>AI Signal</th>
+            <th>News Score</th>
+            <th>Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="signal-tracker-list">
+          <tr><td colspan="5" style="color:var(--text3);font-size:.76rem;padding:12px 10px">ยังไม่มีข้อมูล — รอ signal แรก...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- News Cards -->
+  <div class="news-refresh-row">
+    <div style="font-size:.82rem;font-weight:600;color:var(--text)">📄 Latest News</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="news-last-updated" id="news-last-updated">ยังไม่ได้โหลด</span>
+      <button class="btn-refresh" onclick="fetchNewsAll().catch(()=>{})" title="Refresh news">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="news-cards-grid" id="news-cards-list">
+    <div style="color:var(--text3);font-size:.78rem;padding:20px 0">กำลังโหลดข่าว...</div>
+  </div>
+
 </section>
 
 <!-- ═══════════════════════════════
@@ -1326,79 +1396,6 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
   </div>
 </section>
 
-<!-- ═══════════════════════════════
-     SECTION: NEWS
-═══════════════════════════════ -->
-<section id="s-news">
-  <div class="sh"><div class="st"><span class="ic">📰</span> News &amp; Sentiment</div></div>
-
-  <!-- Aggregate Sentiment Panel -->
-  <div class="news-agg-panel" id="news-agg-panel">
-    <div>
-      <div style="font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Aggregate News Sentiment</div>
-      <div style="display:flex;align-items:baseline;gap:10px">
-        <div class="news-agg-score" id="news-agg-score">--</div>
-        <div class="news-agg-label" id="news-agg-label" style="color:var(--text2)">Loading...</div>
-      </div>
-      <div class="sentiment-bar-wrap">
-        <div class="sentiment-bar-fill" id="news-sent-bar" style="width:50%;background:var(--text3)"></div>
-      </div>
-      <div class="sentiment-bar-labels"><span>Very Bearish −1.0</span><span>Neutral 0</span><span>Very Bullish +1.0</span></div>
-      <div class="news-agg-counts">
-        <div class="news-agg-count-item"><span style="color:var(--green)">🟢</span><span id="news-bull-count">0 Bullish</span></div>
-        <div class="news-agg-count-item"><span style="color:var(--red)">🔴</span><span id="news-bear-count">0 Bearish</span></div>
-        <div class="news-agg-count-item"><span style="color:var(--yellow)">🟡</span><span id="news-neut-count">0 Neutral</span></div>
-      </div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:.72rem;color:var(--text2);margin-bottom:6px">Signal Impact</div>
-      <div id="news-signal-impact" style="font-size:.82rem;font-weight:600;color:var(--text)">--</div>
-    </div>
-  </div>
-
-  <!-- Market Transmission Chain -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title" style="margin-bottom:10px">🔗 Market Transmission Chain</div>
-    <div class="transmission-chain" id="transmission-chain">
-      <div style="color:var(--text3);font-size:.78rem">Loading transmission chain...</div>
-    </div>
-  </div>
-
-  <!-- Signal Tracker -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title" style="margin-bottom:10px">📡 Signal Tracker (News vs AI)</div>
-    <div style="overflow-x:auto">
-      <table class="signal-tracker-table">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>AI Signal</th>
-            <th>News Score</th>
-            <th>Status</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody id="signal-tracker-list">
-          <tr><td colspan="5" style="color:var(--text3);font-size:.76rem;padding:12px 10px">ยังไม่มีข้อมูล — รอ signal แรก...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- News Cards -->
-  <div class="news-refresh-row">
-    <div style="font-size:.82rem;font-weight:600;color:var(--text)">📄 Latest News</div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span class="news-last-updated" id="news-last-updated">ยังไม่ได้โหลด</span>
-      <button class="btn-refresh" onclick="fetchNewsAll().catch(()=>{})" title="Refresh news">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-      </button>
-    </div>
-  </div>
-  <div class="news-cards-grid" id="news-cards-list">
-    <div style="color:var(--text3);font-size:.78rem;padding:20px 0">กำลังโหลดข่าว...</div>
-  </div>
-</section>
 
 </main>
 
@@ -1410,17 +1407,14 @@ button[disabled] { opacity:.32; cursor:not-allowed !important; }
 <!-- BOTTOM NAV (mobile) -->
 <div class="bottom-nav" id="bottomNav">
   <div class="bn-grid">
-    <button class="bn-btn active" id="bn-s-chart" onclick="goTo('s-chart',this)">
-      <span class="bn-ico">📊</span><span>กราฟ</span>
+    <button class="bn-btn active" id="bn-s-signal" onclick="goTo('s-signal',this)">
+      <span class="bn-ico">🔮</span><span>AI Signal</span>
     </button>
-    <button class="bn-btn" id="bn-s-signal" onclick="goTo('s-signal',this)">
-      <span class="bn-ico">🤖</span><span>AI Signal</span>
+    <button class="bn-btn" id="bn-s-chart" onclick="goTo('s-chart',this)">
+      <span class="bn-ico">📊</span><span>กราฟ</span>
     </button>
     <button class="bn-btn" id="bn-s-paper" onclick="goTo('s-paper',this)">
       <span class="bn-ico">💰</span><span>Trading</span>
-    </button>
-    <button class="bn-btn" id="bn-s-news" onclick="goTo('s-news',this)">
-      <span class="bn-ico">📰</span><span>News</span>
     </button>
     <button class="bn-btn" id="bn-s-settings" onclick="goTo('s-settings',this)">
       <span class="bn-ico">⚙️</span><span>ตั้งค่า</span>
@@ -1841,8 +1835,21 @@ function generateSignal(candles) {
     indicators.push({name:'Elliott Wave', val:waveLabel, sig:waveSig, score:waveScore});
   }
 
+  // ── News Sentiment ── max ±2
+  let newsScore = 0, newsSig = 'HOLD', newsLabel = 'N/A';
+  if(S.newsSentiment !== 0) {
+    const ns = S.newsSentiment;
+    if(ns >= 0.4)       { newsScore = 2;  newsSig = 'BUY';  newsLabel = (ns>=0?'+':'')+ns.toFixed(2); reasons.push('🟢 News Sentiment ขาขึ้น ('+ns.toFixed(2)+') — ข่าวสนับสนุน Bullish'); }
+    else if(ns >= 0.15) { newsScore = 1;  newsSig = 'BUY';  newsLabel = '+'+ns.toFixed(2); reasons.push('🟢 News Sentiment เป็นบวกเล็กน้อย (+'+ns.toFixed(2)+')'); }
+    else if(ns <= -0.4) { newsScore = -2; newsSig = 'SELL'; newsLabel = ns.toFixed(2); reasons.push('🔴 News Sentiment ขาลง ('+ns.toFixed(2)+') — ข่าว Bearish'); }
+    else if(ns <= -0.15){ newsScore = -1; newsSig = 'SELL'; newsLabel = ns.toFixed(2); reasons.push('🔴 News Sentiment เป็นลบเล็กน้อย ('+ns.toFixed(2)+')'); }
+    else                { newsScore = 0;  newsSig = 'HOLD'; newsLabel = ns.toFixed(2); }
+  }
+  score += newsScore;
+  indicators.push({name:'News Sentiment', val:newsLabel, sig:newsSig, score:newsScore});
+
   // Determine final signal
-  const maxScore = 21; // max possible (13 base + 2 F&G + 2 Fib + 2 Wave + 2 OBV)
+  const maxScore = 23; // max possible (13 base + 2 F&G + 2 Fib + 2 Wave + 2 OBV + 2 News)
   const confRaw = Math.abs(score)/maxScore*100;
   const confidence = Math.min(95, Math.max(35, 40+confRaw*0.55));
 
@@ -2651,7 +2658,7 @@ function updateBotSignalDisplay(sig) {
   const col=sig.isBuy?'var(--green)':sig.isSell?'var(--red)':'var(--yellow)';
   const nameEl=el('bot-sig-name2'), scoreEl=el('bot-sig-score2'), descEl=el('bot-last-action-desc2');
   if(nameEl){ nameEl.textContent=sig.sigName; nameEl.style.color=col; }
-  if(scoreEl){ scoreEl.textContent=(sig.score>=0?'+':'')+sig.score+'/21'; }
+  if(scoreEl){ scoreEl.textContent=(sig.score>=0?'+':'')+sig.score+'/23'; }
   if(descEl){ descEl.textContent='Confidence: '+sig.confidence+'% · '+S.coin+'/USD'; }
 }
 
@@ -3845,6 +3852,11 @@ function renderNews() {
   renderNewsAggregate();
   renderTransmissionChain();
   renderSignalTracker();
+  // Re-run signal scoring so News Sentiment indicator reflects latest news data
+  if(S.signal && S.candles && S.candles.length >= 50) {
+    const updatedSig = generateSignal(S.candles);
+    if(updatedSig) { S.signal = updatedSig; renderIndicatorCards(updatedSig); }
+  }
 
   const grid = document.getElementById('news-cards-list');
   const lastUpdEl = document.getElementById('news-last-updated');
