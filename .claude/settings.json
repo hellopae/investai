@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "language": "thai",
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(python3:*)",
+      "Bash(open:*)",
+      "Read(**)",
+      "Edit(**)",
+      "Write(**)"
+    ]
+  },
+  "enabledPlugins": {
+    "awesome-finance@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' 2>/dev/null | grep -q '\\.html$' && echo '{\"systemMessage\": \"✅ HTML updated — refresh browser to see changes\"}' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
