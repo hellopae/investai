@@ -261,7 +261,7 @@
         <div class="rng fhz" data-r="180">180 วัน</div>
       </div>
       <div class="chart-box" style="height:440px"><canvas id="fiboChart"></canvas></div>
-      <div class="mini" style="margin-top:8px">🔴 เส้นแดง = แนวต้าน/เป้าขาย · 🟢 เส้นเขียว = แนวรับ/โซนซื้อ · ⚪ เส้นขาว = ราคาปัจจุบัน</div>
+      <div class="mini" style="margin-top:8px">🔴 เส้นแดง = แนวต้าน/เป้าขาย · 🟢 เส้นเขียว = แนวรับ/โซนซื้อ · ⚪ เส้นขาว = ราคาปัจจุบัน · 🔵 โซนฟ้า = กรวยคาดการณ์ที่ราคาน่าจะเคลื่อนภายในเวลาที่เลือก (±1σ) · เส้นฟ้าประ = แนวโน้มกลาง</div>
     </div>
 
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px">
@@ -824,19 +824,46 @@ function renderFiboReco(L){
     </div></div>`;
 }
 function renderFiboChart(L){
-  const P=DATA.prices,T=DATA.times,N=Math.min(150,P.length-1),idx=P.length-N;
-  const labels=T.slice(idx).map(t=>new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+  const a=STATE.analysis,P=DATA.prices,T=DATA.times,cur=L.cur;
+  const N=Math.min(120,P.length-1),idx=P.length-N;
+  const H=STATE.fibHorizon;                       // จำนวนวันที่ยื่นกรวยไปข้างหน้า
+  const histLabels=T.slice(idx).map(t=>new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
   const price=P.slice(idx);
-  const lvAll=[...L.above.map(x=>x.price),...L.below.map(x=>x.price),L.cur];
+  // ---- สร้างกรวยคาดการณ์อนาคต (drift + ±1σ ตาม √เวลา) ----
+  const lastT=T[T.length-1],futLabels=[],futMid=[],futUp=[],futLow=[];
+  for(let i=1;i<=H;i++){
+    const band=a.dailyVol*Math.sqrt(i);
+    futMid.push(cur*Math.exp(a.drift*i));
+    futUp .push(cur*Math.exp(a.drift*i+band));
+    futLow.push(cur*Math.exp(a.drift*i-band));
+    futLabels.push(new Date(lastT+i*86400000).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+  }
+  const labels=[...histLabels,...futLabels];
+  const pad=Array(N-1).fill(null);                // ให้กรวยเริ่มต่อจากราคาปัจจุบัน
+  const priceD=[...price,...Array(H).fill(null)];
+  const midD =[...pad,cur,...futMid];
+  const upD  =[...pad,cur,...futUp];
+  const lowD =[...pad,cur,...futLow];
+  const lvAll=[...L.above.map(x=>x.price),...L.below.map(x=>x.price),cur,...futUp,...futLow];
   const yMin=Math.min(...price,...lvAll)*0.985, yMax=Math.max(...price,...lvAll)*1.02;
   if(charts.fibo) charts.fibo.destroy();
   charts.fibo=new Chart(document.getElementById('fiboChart'),{
     type:'line',
-    data:{labels,datasets:[{label:'ราคา BTC',data:price,borderColor:C.gold,
-      backgroundColor:'rgba(247,147,26,.07)',borderWidth:2,pointRadius:0,fill:true,tension:.15}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+fmt(c.parsed.y)}},fibLadder:{ladder:L}},
-      scales:{x:{ticks:{color:C.mut,maxTicksLimit:8,font:{size:10}},grid:{display:false}},
+    data:{labels,datasets:[
+      {label:'ราคา BTC',data:priceD,borderColor:C.gold,backgroundColor:'rgba(247,147,26,.07)',
+       borderWidth:2,pointRadius:0,fill:true,tension:.15,order:3},
+      {label:'ขอบล่าง',data:lowD,borderColor:'rgba(34,211,238,.35)',borderWidth:1,pointRadius:0,
+       borderDash:[3,3],tension:.1,order:5},
+      {label:'โซนคาดการณ์',data:upD,borderColor:'rgba(34,211,238,.35)',borderWidth:1,pointRadius:0,
+       borderDash:[3,3],tension:.1,fill:1,backgroundColor:'rgba(34,211,238,.10)',order:5},
+      {label:'แนวโน้มกลาง',data:midD,borderColor:C.cyan,borderWidth:2,pointRadius:0,
+       borderDash:[6,4],tension:.1,order:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{filter:i=>i.parsed.y!=null,callbacks:{label:c=>c.dataset.label+': $'+fmt(c.parsed.y)}},
+        fibLadder:{ladder:L}},
+      scales:{x:{ticks:{color:C.mut,maxTicksLimit:9,font:{size:10}},grid:{display:false}},
         y:{min:yMin,max:yMax,position:'right',ticks:{color:C.mut,font:{size:10},callback:v=>'$'+fmt(v)},
           grid:{color:'rgba(255,255,255,.04)'}}}}
   });
