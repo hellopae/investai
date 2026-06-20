@@ -123,6 +123,12 @@
   .rng.on{background:var(--gold);color:#0a0e17;border-color:transparent}
   .rng-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
   .rng-row .lab{font-size:12px;color:var(--mut);font-weight:700;margin-right:2px}
+  .fib-row{display:grid;grid-template-columns:44px 1fr auto;gap:11px;align-items:center;
+    padding:11px 13px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .fib-row:last-child{border-bottom:none}
+  .fib-step{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;
+    font-weight:800;font-size:18px}
+  .fib-step small{display:block;font-size:9px;font-weight:700;margin-top:-2px}
 
   /* ELLIOTT */
   .wave-stage{position:relative;height:360px;background:var(--panel2);border-radius:14px;border:1px solid var(--line);overflow:hidden}
@@ -201,6 +207,7 @@
 
   <div class="tabs" id="tabs">
     <div class="tab on" data-v="predict">🎯 คาดการณ์</div>
+    <div class="tab" data-v="fibo">🪜 เป้าหมาย Fibo</div>
     <div class="tab" data-v="chart">📈 กราฟเทคนิค</div>
     <div class="tab" data-v="wave">🌊 Elliott Wave</div>
     <div class="tab" data-v="reco">💡 คำแนะนำ</div>
@@ -239,6 +246,42 @@
       <h3><span class="ic">📊</span> ตารางสัญญาณเทคนิค (Signal Breakdown)</h3>
       <div class="sub">แต่ละเทคนิคให้สัญญาณอะไร และมีน้ำหนักเท่าไรในการคำนวณรวม</div>
       <div class="sig" id="sigTable"><div class="sig-row"><span class="skel">กำลังโหลด…</span></div></div>
+    </div>
+  </section>
+
+  <!-- ================= FIBO TARGETS ================= -->
+  <section class="view" id="v-fibo">
+    <div class="card">
+      <h3><span class="ic">🪜</span> เป้าหมายราคาตาม Fibonacci + โอกาสไปถึง</h3>
+      <div class="sub">ราคาจะขึ้น/ลงไปถึงแต่ละขั้นกี่ % มีโอกาสแค่ไหน และควรซื้อ/ขายตรงไหน — เส้นในกราฟคือแต่ละขั้น</div>
+      <div class="rng-row">
+        <span class="lab">⏱️ คำนวณโอกาสภายใน:</span>
+        <div class="rng fhz" data-r="30">30 วัน</div>
+        <div class="rng fhz on" data-r="90">90 วัน</div>
+        <div class="rng fhz" data-r="180">180 วัน</div>
+      </div>
+      <div class="chart-box" style="height:440px"><canvas id="fiboChart"></canvas></div>
+      <div class="mini" style="margin-top:8px">🔴 เส้นแดง = แนวต้าน/เป้าขาย · 🟢 เส้นเขียว = แนวรับ/โซนซื้อ · ⚪ เส้นขาว = ราคาปัจจุบัน</div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px">
+      <div class="card">
+        <h3><span class="ic">🔴</span> เป้าหมายขาขึ้น — โซนขายทำกำไร</h3>
+        <div class="sub">ราคาเหนือปัจจุบัน · ขั้น 1 = ใกล้สุด ไปง่ายสุด</div>
+        <div class="sig" id="fiboUp"><div class="fib-row"><span class="skel">กำลังคำนวณ…</span></div></div>
+      </div>
+      <div class="card">
+        <h3><span class="ic">🟢</span> แนวรับ — โซนซื้อสะสม</h3>
+        <div class="sub">ราคาต่ำกว่าปัจจุบัน · ขั้น 1 = ใกล้สุด ย่อนิดเดียวก็ถึง</div>
+        <div class="sig" id="fiboDown"><div class="fib-row"><span class="skel">กำลังคำนวณ…</span></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3><span class="ic">💡</span> สรุปจุดซื้อ-ขายแนะนำ</h3>
+      <div class="sub">อิงแนวรับ-แนวต้าน Fibonacci ร่วมกับทิศทางแนวโน้มรวม</div>
+      <div id="fiboReco"></div>
+      <div class="mini" style="margin-top:12px">* % โอกาสเป็นการประมาณจากความผันผวนทางสถิติ + ทิศทางแนวโน้ม ไม่ใช่การรับประกัน ยิ่งขั้นไกล โอกาสยิ่งน้อย</div>
     </div>
   </section>
 
@@ -336,7 +379,7 @@
    ========================================================= */
 const C = {gold:'#f7931a',grn:'#16c784',red:'#ea3943',blu:'#3b82f6',pur:'#a855f7',cyan:'#22d3ee',mut:'#8a97b0',line:'#222c40'};
 let DATA = null;     // {prices:[...], times:[...]}
-let STATE = {horizon:30, chartRange:180, waveRange:180, layers:{ma50:true,ma200:true,fib:true,proj:true}, analysis:null};
+let STATE = {horizon:30, chartRange:180, waveRange:180, fibHorizon:90, layers:{ma50:true,ma200:true,fib:true,proj:true}, analysis:null, fibLadder:null};
 
 async function loadData(){
   try{
@@ -386,6 +429,11 @@ function macd(a){
   return {line,sig,hist};
 }
 const stdev=a=>{const m=a.reduce((s,x)=>s+x,0)/a.length;return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/a.length);};
+/* normal CDF (สำหรับประเมินโอกาสราคาแตะแต่ละเป้า) */
+function erf(x){const t=1/(1+0.3275911*Math.abs(x));
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+  return x>=0?y:-y;}
+const normCDF=x=>0.5*(1+erf(x/Math.SQRT2));
 
 /* swing/zigzag สำหรับ Elliott Wave */
 function zigzag(prices,th=0.06){
@@ -525,6 +573,7 @@ function renderAll(){
   renderGauge();
   renderScenarios();
   renderSignals();
+  renderFibTab();
   renderCharts();
   renderWave();
   renderReco();
@@ -697,6 +746,124 @@ const fibPlugin={id:'fib',afterDraw(chart,args,opts){
 }};
 Chart.register(fibPlugin);
 
+/* ===================== FIBONACCI TARGET LADDER ===================== */
+function computeFibLadder(horizon){
+  const a=STATE.analysis,P=DATA.prices,cur=a.cur;
+  const look=P.slice(-200);
+  const hi=Math.max(...look),lo=Math.min(...look),d=(hi-lo)||cur*0.2;
+  const lv=[];const add=(p,name)=>{if(p>0)lv.push({price:p,name});};
+  add(hi-d*0.236,'Fib 23.6%'); add(hi-d*0.382,'Fib 38.2%'); add(hi-d*0.5,'Fib 50%');
+  add(hi-d*0.618,'Fib 61.8%'); add(hi-d*0.786,'Fib 78.6%');
+  add(lo,'ฐานเดิม (100%)'); add(hi,'ยอดเดิม (0%)');
+  add(lo-d*0.272,'ต่ำกว่าฐาน 27%'); add(lo-d*0.618,'ต่ำกว่าฐาน 62%');
+  add(hi+d*0.272,'Ext 127.2%'); add(hi+d*0.618,'Ext 161.8%'); add(hi+d,'Ext 200%'); add(hi+d*1.618,'Ext 261.8%');
+  const hVol=a.dailyVol*Math.sqrt(horizon), bull=a.prob/100;
+  const prob=(price,up)=>{
+    const z=Math.abs(Math.log(price/cur))/(hVol||0.01);
+    const base=2*(1-normCDF(z));                       // reflection principle (โอกาสแตะ)
+    const factor=up?(0.55+0.9*bull):(0.55+0.9*(1-bull)); // ปรับตามทิศทางแนวโน้ม
+    return Math.max(2,Math.min(97,Math.round(base*factor*100)));
+  };
+  const mk=up=>x=>({...x,pct:+((x.price-cur)/cur*100).toFixed(1),prob:prob(x.price,up)});
+  const above=lv.filter(x=>x.price>cur*1.004).sort((a,b)=>a.price-b.price).slice(0,5).map(mk(true));
+  const below=lv.filter(x=>x.price<cur*0.996).sort((a,b)=>b.price-a.price).slice(0,5).map(mk(false));
+  return {above,below,cur,hi,lo};
+}
+
+function renderFibTab(){
+  const L=computeFibLadder(STATE.fibHorizon);STATE.fibLadder=L;
+  const upAdv=['ขายทำกำไรไม้แรก ~25%','ขายเพิ่ม ~25%','ขายส่วนใหญ่','เป้าหมายไกล ขายเกือบหมด','เป้าหมายสุดโต่ง'];
+  const dnAdv=['ทยอยซื้อไม้แรก','ซื้อเพิ่มไม้สอง','ซื้อหนัก (ถ้าเทรนด์ใหญ่ยังขึ้น)','แนวรับลึก ของถูก','แนวรับสุดท้าย หลุดแล้วระวัง'];
+  document.getElementById('fiboUp').innerHTML = L.above.length
+    ? L.above.map((x,i)=>fibRow(x,i,true,upAdv[i])).join('')
+    : '<div class="fib-row"><span class="mini">ราคาทะลุแนวต้านหลักไปแล้ว — ทำจุดสูงสุดใหม่ ไม่มีเป้าใกล้</span></div>';
+  document.getElementById('fiboDown').innerHTML = L.below.length
+    ? L.below.map((x,i)=>fibRow(x,i,false,dnAdv[i])).join('')
+    : '<div class="fib-row"><span class="mini">ราคาหลุดแนวรับหลักแล้ว</span></div>';
+  renderFiboReco(L);renderFiboChart(L);
+}
+function fibRow(x,i,up,advice){
+  const col=up?C.red:C.grn, sign=x.pct>=0?'+':'';
+  const pcol=x.prob>=60?C.grn:x.prob>=35?C.gold:C.red;
+  return `<div class="fib-row">
+    <div class="fib-step" style="background:${col}22;color:${col}">${i+1}<small>ขั้น</small></div>
+    <div>
+      <div style="font-weight:800;font-size:15px">$${fmt(x.price)}
+        <span style="color:${col};font-size:12.5px">${sign}${x.pct}%</span></div>
+      <div class="mini">${x.name} · ${advice}</div>
+    </div>
+    <div style="text-align:right;min-width:86px">
+      <div style="font-weight:800;color:${pcol};font-size:15px">${x.prob}%</div>
+      <div class="mini">โอกาสไปถึง</div>
+      <div class="bar" style="height:6px;margin-top:4px;width:82px"><i style="width:${x.prob}%;background:${pcol}"></i></div>
+    </div>
+  </div>`;
+}
+function renderFiboReco(L){
+  const a=STATE.analysis,b1=L.below[0],b2=L.below[1],s1=L.above[0],s2=L.above[1];
+  const stop=L.below.length?L.below[0].price*0.975:L.cur*0.93; // ใต้แนวรับใกล้สุดเล็กน้อย
+  const p=a.prob, dcol=p>=50?C.grn:C.red;
+  let strat;
+  if(p>=60) strat='แนวโน้มหนุนขาขึ้น — เน้น "ซื้อตอนย่อ" ที่แนวรับขั้น 1–2 แล้วถือไปทยอยขายที่เป้าขั้น 1–3';
+  else if(p>=45) strat='ตลาดยังไม่ชัดเจน — รอราคาแตะแนวรับขั้น 1–2 ค่อยทยอยซื้อ และแบ่งขายบางส่วนเมื่อถึงเป้าขั้น 1';
+  else strat='แนวโน้มอ่อนแอ — ระวังการไล่ซื้อ ควรรอแนวรับลึก (ขั้น 3–5) หรือลดพอร์ตเมื่อเด้งชนแนวต้าน';
+  document.getElementById('fiboReco').innerHTML=`
+    <div class="plan" style="grid-template-columns:repeat(3,1fr)">
+      <div class="pc"><small>🟢 โซนซื้อแนะนำ</small>
+        <b style="color:${C.grn}">${b1?'$'+fmt(b1.price):'-'}${b2?' – $'+fmt(b2.price):''}</b>
+        <div class="mini">${b1?b1.pct+'% จากราคาปัจจุบัน · โอกาสแตะ '+b1.prob+'%':'ราคาอยู่ใกล้แนวรับแล้ว'}</div></div>
+      <div class="pc"><small>🔴 ขายทำกำไร</small>
+        <b style="color:${C.red}">${s1?'$'+fmt(s1.price):'-'}${s2?' – $'+fmt(s2.price):''}</b>
+        <div class="mini">${s1?'+'+s1.pct+'% · โอกาสแตะ '+s1.prob+'%':'ทำจุดสูงสุดใหม่'}</div></div>
+      <div class="pc"><small>🛑 Stop Loss</small>
+        <b style="color:${C.gold}">$${fmt(stop)}</b>
+        <div class="mini">${((stop-L.cur)/L.cur*100).toFixed(1)}% หากหลุดให้ตัดขาดทุน</div></div>
+    </div>
+    <div class="reason" style="margin-top:12px"><span class="ri">🧭</span><div>
+      ทิศทางแนวโน้มรวม <b style="color:${dcol}">${p}% ขาขึ้น</b> (คลื่น ${a.wave.curLabel}) · <b>กลยุทธ์:</b> ${strat}
+    </div></div>`;
+}
+function renderFiboChart(L){
+  const P=DATA.prices,T=DATA.times,N=Math.min(150,P.length-1),idx=P.length-N;
+  const labels=T.slice(idx).map(t=>new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+  const price=P.slice(idx);
+  const lvAll=[...L.above.map(x=>x.price),...L.below.map(x=>x.price),L.cur];
+  const yMin=Math.min(...price,...lvAll)*0.985, yMax=Math.max(...price,...lvAll)*1.02;
+  if(charts.fibo) charts.fibo.destroy();
+  charts.fibo=new Chart(document.getElementById('fiboChart'),{
+    type:'line',
+    data:{labels,datasets:[{label:'ราคา BTC',data:price,borderColor:C.gold,
+      backgroundColor:'rgba(247,147,26,.07)',borderWidth:2,pointRadius:0,fill:true,tension:.15}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+fmt(c.parsed.y)}},fibLadder:{ladder:L}},
+      scales:{x:{ticks:{color:C.mut,maxTicksLimit:8,font:{size:10}},grid:{display:false}},
+        y:{min:yMin,max:yMax,position:'right',ticks:{color:C.mut,font:{size:10},callback:v=>'$'+fmt(v)},
+          grid:{color:'rgba(255,255,255,.04)'}}}}
+  });
+}
+/* plugin วาดเส้นเป้าหมาย Fibonacci + label แต่ละขั้น */
+const fibLadderPlugin={id:'fibLadder',afterDraw(chart,args,opts){
+  const L=opts.ladder;if(!L)return;
+  const {ctx,chartArea,scales}=chart,y=scales.y;
+  const drawLine=(price,col,txt)=>{
+    const yp=y.getPixelForValue(price);if(yp<chartArea.top-1||yp>chartArea.bottom+1)return;
+    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(chartArea.left,yp);ctx.lineTo(chartArea.right,yp);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=col;ctx.font='bold 11px sans-serif';ctx.textBaseline='bottom';ctx.textAlign='left';
+    ctx.fillText(txt,chartArea.left+5,yp-2);ctx.restore();
+  };
+  L.below.slice().reverse().forEach((x,ri)=>{const i=L.below.length-1-ri;
+    drawLine(x.price,i===0?'#16c784':'rgba(22,199,132,.55)',`🟢 ขั้น ${i+1} · $${fmt(x.price)} (${x.pct}%) · โอกาส ${x.prob}%`);});
+  L.above.forEach((x,i)=>
+    drawLine(x.price,i===0?'#ea3943':'rgba(234,57,67,.55)',`🔴 ขั้น ${i+1} · $${fmt(x.price)} (+${x.pct}%) · โอกาส ${x.prob}%`));
+  const yc=y.getPixelForValue(L.cur);
+  ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=1.7;ctx.setLineDash([2,2]);
+  ctx.beginPath();ctx.moveTo(chartArea.left,yc);ctx.lineTo(chartArea.right,yc);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#fff';ctx.font='bold 12px sans-serif';ctx.textAlign='right';ctx.textBaseline='bottom';
+  ctx.fillText('⚪ ตอนนี้ $'+fmt(L.cur),chartArea.right-5,yc-2);ctx.restore();
+}};
+Chart.register(fibLadderPlugin);
+
 /* ---------- Elliott Wave SVG ---------- */
 function renderWave(){
   const a=STATE.analysis,w=a.wave,svg=document.getElementById('waveSvg');
@@ -861,6 +1028,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.getElementById('v-'+t.dataset.v).classList.add('on');
   // chart ต้อง resize หลังแสดง
   if(t.dataset.v==='chart'){setTimeout(()=>{Object.values(charts).forEach(c=>c&&c.resize());},60);}
+  if(t.dataset.v==='fibo'&&STATE.fibLadder){setTimeout(()=>renderFiboChart(STATE.fibLadder),60);}
   if(t.dataset.v==='wave'){setTimeout(renderWave,60);}
 });
 // timeframe
@@ -884,13 +1052,18 @@ document.querySelectorAll('.wrng').forEach(t=>t.onclick=()=>{
   STATE.analysis.wave=computeWave(STATE.waveRange);
   renderWave();renderReco();
 });
+// fibo horizon (กรอบเวลาคำนวณโอกาสไปถึงเป้า)
+document.querySelectorAll('.fhz').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.fhz').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');STATE.fibHorizon=+t.dataset.r;renderFibTab();
+});
 
 /* boot */
 (async function(){
   renderEdu();
   DATA=await loadData();
+  await refreshLive();   // ดึงราคาล่าสุดมา sync เข้า DATA ก่อนวิเคราะห์ ให้หัวเว็บกับกราฟตรงกัน
   renderAll();
-  await refreshLive();
   setInterval(refreshLive,60000);
   window.addEventListener('resize',()=>{setTimeout(renderWave,100);});
 })();
